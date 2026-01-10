@@ -1,58 +1,81 @@
-// Replace this with your Google Apps Script Web App URL
-const API_URL = "https://script.google.com/macros/s/AKfycbw5d9RE81_h7rIG5wP9RKXWHwd173Dq-0v-Xz6ftcnte5s5MefeIC4zZ-yFogB3TSRYGQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec";
 
-// Fetch vehicle data from Google Sheets API
-async function fetchVehicles() {
-  try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-    const data = await response.json();
-    console.log("API data:", data); // Debug: shows the JSON in console
-
-    if (Array.isArray(data) && data.length > 0) {
-      displayVehicles(data);
-    } else {
-      document.getElementById("vehicle-list").innerHTML =
-        "<p>No vehicles found.</p>";
-    }
-  } catch (error) {
-    console.error("Error fetching vehicles:", error);
-    document.getElementById("vehicle-list").innerHTML =
-      "<p>Unable to load vehicles.</p>";
-  }
+/* Utility */
+function getQueryParam(param) {
+  return new URLSearchParams(window.location.search).get(param);
 }
 
-// Render vehicle data into the page
+/* Fetch vehicles */
+async function fetchVehicles() {
+  const response = await fetch(API_URL);
+  const vehicles = await response.json();
+  displayVehicles(vehicles);
+}
+
+/* Display vehicle cards */
 function displayVehicles(vehicles) {
   const container = document.getElementById("vehicle-list");
-  if (!container) {
-    console.error("Container element #vehicle-list not found");
-    return;
-  }
+  if (!container) return;
 
-  container.innerHTML = ""; // Clear previous content
-
-  vehicles.forEach(vehicle => {
+  vehicles.forEach(v => {
     const card = document.createElement("div");
-    card.className = "vehicle-card";
+    card.style.border = "1px solid #ccc";
+    card.style.padding = "10px";
+    card.style.margin = "10px";
+    card.style.cursor = "pointer";
+
     card.innerHTML = `
-      <h2>${vehicle.name} (${vehicle.year})</h2>
-      <p><strong>Make:</strong> ${vehicle.make}</p>
-      <p><strong>Model:</strong> ${vehicle.model}</p>
-      <p><strong>VIN:</strong> ${vehicle.vin}</p>
-      <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
+      <strong>${v.year} ${v.make} ${v.model}</strong><br>
+      VIN: ${v.vin}
     `;
+
+    card.onclick = () => {
+      window.location.href =
+        `maintenance.html?vin=${encodeURIComponent(v.vin)}`;
+    };
+
     container.appendChild(card);
   });
 }
 
-// Load vehicles on page load
-fetchVehicles();
+/* Load selected vehicle */
+async function loadVehicle() {
+  const vin = getQueryParam("vin");
+  if (!vin) return;
 
+  const response = await fetch(API_URL);
+  const vehicles = await response.json();
+  const vehicle = vehicles.find(v => v.vin === vin);
+  if (!vehicle) return;
 
+  document.getElementById("vehicleTitle").textContent =
+    `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
+  document.getElementById("vin").value = vin;
+}
 
+/* Submit maintenance */
+document.addEventListener("submit", async (e) => {
+  if (e.target.id !== "maintenanceForm") return;
+  e.preventDefault();
 
+  const payload = {
+    vin: vin.value,
+    odometer: odometer.value,
+    service: service.value,
+    parts: parts.value,
+    notes: notes.value
+  };
 
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
 
+  alert("Maintenance saved!");
+  e.target.reset();
+});
+
+/* Detect page */
+if (document.getElementById("vehicle-list")) fetchVehicles();
+if (document.getElementById("maintenanceForm")) loadVehicle();

@@ -6,17 +6,13 @@
   <link rel="stylesheet" href="style.css">
   <script src="app.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      // Get VIN from query parameter
+    document.addEventListener("DOMContentLoaded", () => {
       const vin = getQueryParam("vin");
-      const vinDisplay = document.getElementById("vehicleVIN");
       if (!vin) {
-        vinDisplay.textContent = "VIN missing";
+        alert("VIN missing in URL");
         return;
       }
-      vinDisplay.textContent = vin;
-
-      // Bind dashboard buttons to proper pages
+      document.getElementById("vehicleVIN").textContent = vin;
       bindVehicleButtons();
     });
   </script>
@@ -25,7 +21,6 @@
   <header>Vehicle Dashboard</header>
   <main>
     <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
-
     <div class="dashboard-buttons">
       <button id="addMaintenanceBtn">Add Maintenance</button>
       <button id="viewHistoryBtn">View Maintenance History</button>

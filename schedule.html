@@ -3,28 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>Schedule Future Maintenance</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script>
-    // Replace with your Apps Script Web App URL (no ?sheet needed for POST)
     const API_URL = "YOUR_WEB_APP_URL_HERE";
 
-    // Get URL parameter
     function getQueryParam(name) {
       return new URLSearchParams(window.location.search).get(name);
     }
 
     async function submitSchedule(event) {
       event.preventDefault();
-
       const vin = getQueryParam("vin");
-      if (!vin) {
-        alert("VIN missing. Cannot schedule maintenance.");
-        return;
-      }
+      if (!vin) { alert("VIN missing"); return; }
 
       const data = {
-        type: "future",  // tells Apps Script this is a future maintenance record
+        type: "future",
         vin: vin.toString().trim(),
         planned_date: document.getElementById("plannedDate").value,
         service: document.getElementById("service").value,
@@ -42,7 +35,6 @@
           body: JSON.stringify(data)
         });
         const result = await response.json();
-
         if (result.status === "success") {
           alert("Future maintenance scheduled successfully!");
           document.getElementById("scheduleForm").reset();
@@ -56,9 +48,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("scheduleForm");
-      form.addEventListener("submit", submitSchedule);
-
+      document.getElementById("scheduleForm").addEventListener("submit", submitSchedule);
       const vin = getQueryParam("vin");
       if (vin) document.getElementById("vehicleVIN").textContent = vin.toString().trim();
     });
@@ -72,18 +62,15 @@
       <label>
         Planned Date:<br>
         <input type="date" id="plannedDate" required>
-      </label><br><br>
-
+      </label><br>
       <label>
         Service Type:<br>
         <input type="text" id="service" required>
-      </label><br><br>
-
+      </label><br>
       <label>
         Notes:<br>
         <textarea id="notes"></textarea>
-      </label><br><br>
-
+      </label><br>
       <button type="submit">Schedule Maintenance</button>
     </form>
   </main>

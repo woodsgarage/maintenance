@@ -79,3 +79,4 @@ document.addEventListener("submit", async (e) => {
 /* Detect page */
 if (document.getElementById("vehicle-list")) fetchVehicles();
 if (document.getElementById("maintenanceForm")) loadVehicle();
+

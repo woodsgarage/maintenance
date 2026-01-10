@@ -1,10 +1,10 @@
 // -----------------------------
 // Replace with your Web App URL
 // -----------------------------
-const API_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec";
 
 // -----------------------------
-// Helper: Get URL query parameter
+// Get URL query parameter
 // -----------------------------
 function getQueryParam(key) {
   const params = new URLSearchParams(window.location.search);
@@ -70,8 +70,7 @@ function displayVehicles(vehicles) {
 }
 
 // -----------------------------
-// Load Emails into dropdown
-// (used by schedule.html)
+// Load Emails for schedule.html
 // -----------------------------
 async function loadEmails() {
   try {

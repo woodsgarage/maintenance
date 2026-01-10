@@ -42,3 +42,4 @@ function displayVehicles(data) {
 
 fetchVehicles();
 
+

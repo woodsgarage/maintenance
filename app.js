@@ -1,8 +1,8 @@
 // ============================
 // Configuration
 // ============================
-const VEHICLES_API_URL = "YOUR_WEB_APP_URL_HERE?sheet=Vehicles";
-const MAINTENANCE_API_URL = "YOUR_WEB_APP_URL_HERE?sheet=Maintenance";
+const VEHICLES_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Vehicles";
+const MAINTENANCE_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Maintenance";
 
 // ============================
 // Utility Functions
@@ -143,3 +143,4 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("viewHistoryBtn") ||
       document.getElementById("scheduleBtn")) bindVehicleButtons();
 });
+

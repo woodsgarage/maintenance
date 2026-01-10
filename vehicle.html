@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Vehicle Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <script src="app.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const vin = getQueryParam("vin");
-      if (!vin) {
-        alert("VIN missing in URL");
-        return;
-      }
-      document.getElementById("vehicleVIN").textContent = vin;
-      bindVehicleButtons();
-    });
-  </script>
 </head>
 <body>
-  <header>Vehicle Dashboard</header>
-  <main>
-    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
-    <div class="dashboard-buttons">
-      <button id="addMaintenanceBtn">Add Maintenance</button>
-      <button id="viewHistoryBtn">View Maintenance History</button>
-      <button id="scheduleBtn">Schedule Maintenance</button>
-    </div>
-  </main>
-  <footer>&copy; 2026 Woods Garage</footer>
+
+<h1 id="title">Vehicle</h1>
+
+<button onclick="go('history.html')">Maintenance History</button>
+<button onclick="go('maintenance.html')">Add Maintenance</button>
+<button onclick="go('schedule.html')">Schedule Maintenance</button>
+
+<script src="app.js"></script>
+<script>
+const vin = new URLSearchParams(location.search).get("vin");
+
+function go(p) {
+  location.href = `${p}?vin=${encodeURIComponent(vin)}`;
+}
+
+loadJSONP(`${API_URL}?sheet=Vehicles`, "vehicleLoaded")
+.then(list => {
+  const v = list.find(x => x.vin === vin);
+  document.getElementById("title").textContent =
+    `${v.year} ${v.make} ${v.model}`;
+});
+</script>
+
 </body>
 </html>

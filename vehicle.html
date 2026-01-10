@@ -2,30 +2,27 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Select Vehicle</title>
-  <!-- Google Font -->
+  <title>Vehicle Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <!-- Your CSS file -->
   <link rel="stylesheet" href="style.css">
-  <!-- JavaScript file -->
   <script src="app.js" defer></script>
 </head>
 <body>
-
   <header>
-    Vehicle Maintenance
+    Vehicle Dashboard
   </header>
 
   <main>
-    <h1>Select a Vehicle</h1>
+    <h1 id="vehicleTitle">Loading vehicle...</h1>
 
-    <!-- Container for vehicle cards -->
-    <div id="vehicle-list" class="vehicle-list"></div>
+    <div class="dashboard-options">
+      <button id="addMaintenanceBtn">Add Maintenance Record</button>
+      <button id="viewHistoryBtn">View Maintenance History</button>
+    </div>
   </main>
 
   <footer>
     &copy; 2026 Woods Garage
   </footer>
-
 </body>
 </html>

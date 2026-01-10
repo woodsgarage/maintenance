@@ -1,92 +1,145 @@
-function doGet(e) {
-  const sheetName = e.parameter.sheet || "Vehicles";
-  const sheet = SpreadsheetApp.getActive().getSheetByName(sheetName);
-  if (!sheet) return ContentService.createTextOutput("[]").setMimeType(ContentService.MimeType.JSON);
+// ============================
+// Configuration
+// ============================
+const VEHICLES_API_URL = "YOUR_WEB_APP_URL_HERE?sheet=Vehicles";
+const MAINTENANCE_API_URL = "YOUR_WEB_APP_URL_HERE?sheet=Maintenance";
 
-  const rows = sheet.getDataRange().getValues();
-  const headers = rows.shift();
-  const data = rows.map(r => {
-    let obj = {};
-    headers.forEach((h, i) => obj[h] = r[i]);
-    return obj;
-  });
-
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+// ============================
+// Utility Functions
+// ============================
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
 }
 
-function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
+function formatDate(ts) {
+  if (!ts) return "N/A";
+  const date = new Date(ts);
+  if (isNaN(date)) return ts;
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+}
 
-  if (data.type === "future") {
-    scheduleFutureMaintenance(data);
-  } else {
-    appendMaintenanceRecord(data);
+// ============================
+// Vehicles Functions
+// ============================
+async function fetchVehicles() {
+  try {
+    const response = await fetch(VEHICLES_API_URL);
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error("Error fetching vehicles:", err);
+    return [];
+  }
+}
+
+function displayVehicles(vehicles) {
+  const container = document.getElementById("vehicle-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!vehicles.length) {
+    container.innerHTML = "<p>No vehicles found.</p>";
+    return;
   }
 
-  return ContentService.createTextOutput(
-    JSON.stringify({ status: "success" })
-  ).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Append normal maintenance record
-function appendMaintenanceRecord(data) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("Maintenance");
-  sheet.appendRow([
-    new Date(),
-    (data.vin || "").toString().trim(),
-    data.odometer || "",
-    data.service || "",
-    data.parts || "",
-    data.notes || ""
-  ]);
-}
-
-// Append future maintenance record
-function scheduleFutureMaintenance(data) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("FutureMaintenance");
-  sheet.appendRow([
-    new Date(),
-    (data.vin || "").toString().trim(),
-    (data.planned_date || "").toString().trim(),
-    data.service || "",
-    data.notes || "",
-    "NO", // notified_14
-    "NO", // notified_7
-    "NO", // notified_3
-    "NO"  // notified_1
-  ]);
-}
-
-// Send reminders at 14, 7, 3, 1 days before planned date
-function sendScheduledReminders() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("FutureMaintenance");
-  if (!sheet) return;
-
-  const rows = sheet.getDataRange().getValues();
-  rows.shift(); // remove header
-
-  const today = new Date();
-
-  rows.forEach((row, i) => {
-    const [timestamp, vin, plannedDateStr, service, notes, notified14, notified7, notified3, notified1] = row;
-    const plannedDate = new Date(plannedDateStr);
-    const diffDays = Math.ceil((plannedDate - today) / (1000*60*60*24));
-
-    const sendEmail = (colIndex, intervalDays) => {
-      if ((row[colIndex] || "NO") !== "YES" && diffDays <= intervalDays && diffDays >= 0) {
-        MailApp.sendEmail(
-          "youremail@example.com",
-          `Maintenance Reminder for VIN ${vin}`,
-          `Scheduled service: ${service}\nDate: ${plannedDateStr}\nNotes: ${notes}\nReminder: ${intervalDays} day(s) before`
-        );
-        sheet.getRange(i + 2, colIndex + 1).setValue("YES"); // i+2 because header
-      }
-    };
-
-    sendEmail(5, 14);
-    sendEmail(6, 7);
-    sendEmail(7, 3);
-    sendEmail(8, 1);
+  vehicles.forEach(vehicle => {
+    const card = document.createElement("div");
+    card.className = "vehicle-card";
+    card.innerHTML = `
+      <h2>${vehicle.name} (${vehicle.year})</h2>
+      <p><strong>Make:</strong> ${vehicle.make}</p>
+      <p><strong>Model:</strong> ${vehicle.model}</p>
+      <p><strong>VIN:</strong> ${vehicle.vin}</p>
+      <button class="viewBtn">View Dashboard</button>
+    `;
+    card.querySelector(".viewBtn").addEventListener("click", () => {
+      window.location.href = `vehicle.html?vin=${encodeURIComponent(vehicle.vin)}`;
+    });
+    container.appendChild(card);
   });
 }
+
+async function loadVehiclesPage() {
+  const container = document.getElementById("vehicle-list");
+  if (!container) return;
+  container.innerHTML = "<p>Loading vehicles...</p>";
+  const vehicles = await fetchVehicles();
+  displayVehicles(vehicles);
+}
+
+// ============================
+// Maintenance Functions
+// ============================
+async function fetchMaintenanceRecords() {
+  try {
+    const response = await fetch(MAINTENANCE_API_URL);
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error("Error fetching maintenance records:", err);
+    return [];
+  }
+}
+
+function filterAndSortMaintenance(records, vin) {
+  return records
+    .filter(r => ((r.vin || r.VIN || "").toString().trim() === vin.trim()))
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
+function displayMaintenance(records, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!records.length) {
+    container.innerHTML = "<p>No maintenance records found.</p>";
+    return;
+  }
+
+  records.forEach(record => {
+    const card = document.createElement("div");
+    card.className = "vehicle-card";
+    card.innerHTML = `
+      <p><strong>Date:</strong> ${formatDate(record.timestamp)}</p>
+      <p><strong>Mileage:</strong> ${record.odometer || "N/A"}</p>
+      <p><strong>Service:</strong> ${record.service || "N/A"}</p>
+      <p><strong>Parts:</strong> ${record.parts || "N/A"}</p>
+      <p><strong>Notes:</strong> ${record.notes || "N/A"}</p>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ============================
+// Vehicle.html Button Bindings
+// ============================
+function bindVehicleButtons() {
+  const vin = getQueryParam("vin");
+  if (!vin) return;
+
+  const addBtn = document.getElementById("addMaintenanceBtn");
+  const historyBtn = document.getElementById("viewHistoryBtn");
+  const scheduleBtn = document.getElementById("scheduleBtn");
+
+  if (addBtn) addBtn.addEventListener("click", () => {
+    window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+  });
+  if (historyBtn) historyBtn.addEventListener("click", () => {
+    window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  });
+  if (scheduleBtn) scheduleBtn.addEventListener("click", () => {
+    window.location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+  });
+}
+
+// ============================
+// Initialization
+// ============================
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("vehicle-list")) loadVehiclesPage();
+  if (document.getElementById("addMaintenanceBtn") ||
+      document.getElementById("viewHistoryBtn") ||
+      document.getElementById("scheduleBtn")) bindVehicleButtons();
+});

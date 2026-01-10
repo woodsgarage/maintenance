@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Schedule Future Maintenance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Replace with your Apps Script Web App URL (no ?sheet needed for POST)
+    const API_URL = "YOUR_WEB_APP_URL_HERE";
+
+    // Get URL parameter
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    async function submitSchedule(event) {
+      event.preventDefault();
+
+      const vin = getQueryParam("vin");
+      if (!vin) {
+        alert("VIN missing. Cannot schedule maintenance.");
+        return;
+      }
+
+      const data = {
+        type: "future",  // tells Apps Script this is a future maintenance record
+        vin: vin.toString().trim(),
+        planned_date: document.getElementById("plannedDate").value,
+        service: document.getElementById("service").value,
+        notes: document.getElementById("notes").value
+      };
+
+      if (!data.planned_date || !data.service) {
+        alert("Please fill in the planned date and service type.");
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        if (result.status === "success") {
+          alert("Future maintenance scheduled successfully!");
+          document.getElementById("scheduleForm").reset();
+        } else {
+          alert("Error scheduling maintenance: " + (result.message || "Unknown error"));
+        }
+      } catch (error) {
+        console.error("Error submitting schedule:", error);
+        alert("Error submitting schedule. Check console for details.");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("scheduleForm");
+      form.addEventListener("submit", submitSchedule);
+
+      const vin = getQueryParam("vin");
+      if (vin) document.getElementById("vehicleVIN").textContent = vin.toString().trim();
+    });
+  </script>
+</head>
+<body>
+  <header>Schedule Future Maintenance</header>
+  <main>
+    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
+    <form id="scheduleForm">
+      <label>
+        Planned Date:<br>
+        <input type="date" id="plannedDate" required>
+      </label><br><br>
+
+      <label>
+        Service Type:<br>
+        <input type="text" id="service" required>
+      </label><br><br>
+
+      <label>
+        Notes:<br>
+        <textarea id="notes"></textarea>
+      </label><br><br>
+
+      <button type="submit">Schedule Maintenance</button>
+    </form>
+  </main>
+  <footer>&copy; 2026 Woods Garage</footer>
+</body>
+</html>

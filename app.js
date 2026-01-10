@@ -1,12 +1,10 @@
 // ---------------------------
 // CONFIG
 // ---------------------------
-
-// Replace with your Google Apps Script Web App URL
-const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Google Apps Script URL
 
 // ---------------------------
-// HELPER FUNCTION: Get query parameter from URL
+// HELPER: Get query parameter
 // ---------------------------
 function getQueryParam(name) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -14,7 +12,7 @@ function getQueryParam(name) {
 }
 
 // ---------------------------
-// INDEX PAGE: Fetch and display vehicles
+// INDEX: Load and display vehicles
 // ---------------------------
 async function fetchVehicles() {
   try {
@@ -22,97 +20,159 @@ async function fetchVehicles() {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
+    const container = document.getElementById("vehicle-list");
 
-    if (Array.isArray(data) && data.length > 0) {
-      displayVehicles(data);
-    } else {
-      document.getElementById("vehicle-list").innerHTML =
-        "<p>No vehicles found.</p>";
+    if (!container) return;
+
+    if (!data.length) {
+      container.innerHTML = "<p>No vehicles found.</p>";
+      return;
     }
+
+    container.innerHTML = "";
+
+    data.forEach(vehicle => {
+      const card = document.createElement("div");
+      card.className = "vehicle-card";
+      card.innerHTML = `
+        <h2>${vehicle.name} (${vehicle.year})</h2>
+        <p><strong>Make:</strong> ${vehicle.make}</p>
+        <p><strong>Model:</strong> ${vehicle.model}</p>
+        <p><strong>VIN:</strong> ${vehicle.vin}</p>
+        <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
+      `;
+
+      card.onclick = () => {
+        window.location.href = `vehicle.html?vin=${encodeURIComponent(vehicle.vin)}`;
+      };
+
+      container.appendChild(card);
+    });
   } catch (error) {
     console.error("Error fetching vehicles:", error);
-    document.getElementById("vehicle-list").innerHTML =
-      "<p>Unable to load vehicles.</p>";
   }
 }
 
-// Render vehicle cards
-function displayVehicles(vehicles) {
-  const container = document.getElementById("vehicle-list");
-  if (!container) return;
-
-  container.innerHTML = ""; // Clear previous content
-
-  vehicles.forEach(vehicle => {
-    const card = document.createElement("div");
-    card.className = "vehicle-card";
-    card.innerHTML = `
-      <h2>${vehicle.name} (${vehicle.year})</h2>
-      <p><strong>Make:</strong> ${vehicle.make}</p>
-      <p><strong>Model:</strong> ${vehicle.model}</p>
-      <p><strong>VIN:</strong> ${vehicle.vin}</p>
-      <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
-    `;
-
-    // On click, go to vehicle dashboard
-    card.onclick = () => {
-      window.location.href = `vehicle.html?vin=${encodeURIComponent(vehicle.vin)}`;
-    };
-
-    container.appendChild(card);
-  });
-}
-
 // ---------------------------
-// VEHICLE DASHBOARD PAGE
+// VEHICLE DASHBOARD
 // ---------------------------
 async function loadVehicleDashboard() {
   const vin = getQueryParam("vin");
   if (!vin) return;
 
-  try {
-    const response = await fetch(API_URL);
-    const vehicles = await response.json();
-    const vehicle = vehicles.find(v => v.vin === vin);
-    if (!vehicle) return;
+  const response = await fetch(API_URL);
+  const vehicles = await response.json();
+  const vehicle = vehicles.find(v => v.vin === vin);
+  if (!vehicle) return;
 
-    document.getElementById("vehicleTitle").textContent =
-      `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  document.getElementById("vehicleTitle").textContent =
+    `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
-    // Dashboard buttons
-    const viewHistoryBtn = document.getElementById("viewHistoryBtn");
-    const addMaintenanceBtn = document.getElementById("addMaintenanceBtn");
+  const addBtn = document.getElementById("addMaintenanceBtn");
+  const historyBtn = document.getElementById("viewHistoryBtn");
 
-    if (viewHistoryBtn) {
-      viewHistoryBtn.onclick = () => {
-        // Placeholder: go to history page
-        window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-      };
-    }
+  if (addBtn) addBtn.onclick = () => {
+    window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+  };
 
-    if (addMaintenanceBtn) {
-      addMaintenanceBtn.onclick = () => {
-        // Go to maintenance form page
-        window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
-      };
-    }
-
-  } catch (error) {
-    console.error("Error loading vehicle dashboard:", error);
-  }
+  if (historyBtn) historyBtn.onclick = () => {
+    window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  };
 }
 
 // ---------------------------
-// DETECT PAGE AND INIT
+// MAINTENANCE FORM PAGE
 // ---------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  // INDEX PAGE
-  if (document.getElementById("vehicle-list")) {
-    fetchVehicles();
+async function loadMaintenanceForm() {
+  const vin = getQueryParam("vin");
+  if (!vin) return;
+
+  const response = await fetch(API_URL);
+  const vehicles = await response.json();
+  const vehicle = vehicles.find(v => v.vin === vin);
+  if (!vehicle) return;
+
+  document.getElementById("maintenanceVehicleTitle").textContent =
+    `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+
+  const form = document.getElementById("maintenanceForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      vin: vin,
+      date: form.date.value,
+      mileage: form.mileage.value,
+      description: form.description.value,
+      parts: form.parts.value
+    };
+
+    try {
+      const res = await fetch(API_URL + "?action=add", {
+        method: "POST",
+        body: JSON.stringify(formData)
+      });
+
+      if (res.ok) {
+        alert("Maintenance record added!");
+        form.reset();
+      } else {
+        alert("Error submitting maintenance");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting maintenance");
+    }
+  });
+}
+
+// ---------------------------
+// HISTORY PAGE
+// ---------------------------
+async function loadMaintenanceHistory() {
+  const vin = getQueryParam("vin");
+  if (!vin) return;
+
+  const response = await fetch(API_URL);
+  const records = await response.json();
+
+  const historyDiv = document.getElementById("maintenanceHistory");
+  if (!historyDiv) return;
+
+  const vehicleRecords = records.filter(r => r.vin === vin);
+  const title = document.getElementById("historyVehicleTitle");
+  if (title && vehicleRecords.length) {
+    title.textContent = `${vehicleRecords[0].make} ${vehicleRecords[0].model} Maintenance History`;
   }
 
-  // VEHICLE DASHBOARD PAGE
-  if (document.getElementById("vehicleTitle")) {
-    loadVehicleDashboard();
+  historyDiv.innerHTML = "";
+
+  if (!vehicleRecords.length) {
+    historyDiv.innerHTML = "<p>No maintenance records found.</p>";
+    return;
   }
+
+  vehicleRecords.forEach(record => {
+    const card = document.createElement("div");
+    card.className = "vehicle-card";
+    card.innerHTML = `
+      <p><strong>Date:</strong> ${record.date}</p>
+      <p><strong>Mileage:</strong> ${record.mileage}</p>
+      <p><strong>Description:</strong> ${record.description}</p>
+      <p><strong>Parts:</strong> ${record.parts || "N/A"}</p>
+    `;
+    historyDiv.appendChild(card);
+  });
+}
+
+// ---------------------------
+// PAGE INIT
+// ---------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("vehicle-list")) fetchVehicles();
+  if (document.getElementById("vehicleTitle")) loadVehicleDashboard();
+  if (document.getElementById("maintenanceForm")) loadMaintenanceForm();
+  if (document.getElementById("maintenanceHistory")) loadMaintenanceHistory();
 });

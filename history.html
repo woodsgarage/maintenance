@@ -6,23 +6,20 @@
   <link rel="stylesheet" href="style.css">
   <script src="app.js"></script>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Maintenance";
-
     document.addEventListener("DOMContentLoaded", async () => {
       const vin = getQueryParam("vin");
-      const container = document.getElementById("historyContainer");
-      if (!vin || !container) return;
-
-      container.innerHTML = "<p>Loading maintenance records...</p>";
+      if (!vin) {
+        alert("VIN missing in URL");
+        return;
+      }
+      document.getElementById("vehicleVIN").textContent = vin;
 
       try {
-        const response = await fetch(API_URL);
-        const records = await response.json();
-        const vehicleRecords = records.filter(r => {
-          const recordVin = (r.vin || r.VIN || "").toString().trim();
-          return recordVin === vin.trim();
-        }).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const res = await fetch(`${API_URL}?sheet=Maintenance`);
+        const records = await res.json();
+        const vehicleRecords = records.filter(r => (r.vin || "").trim() === vin.trim());
 
+        const container = document.getElementById("historyList");
         if (!vehicleRecords.length) {
           container.innerHTML = "<p>No maintenance records found.</p>";
           return;
@@ -30,20 +27,21 @@
 
         container.innerHTML = "";
         vehicleRecords.forEach(r => {
-          const card = document.createElement("div");
-          card.className = "vehicle-card";
-          card.innerHTML = `
-            <p><strong>Date:</strong> ${formatDate(r.timestamp)}</p>
-            <p><strong>Mileage:</strong> ${r.odometer || "N/A"}</p>
-            <p><strong>Service:</strong> ${r.service || "N/A"}</p>
-            <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>
-            <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+          const row = document.createElement("div");
+          const date = new Date(r.timestamp);
+          row.className = "vehicle-card";
+          row.innerHTML = `
+            <p><strong>Date:</strong> ${date.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}</p>
+            <p><strong>Odometer:</strong> ${r.odometer || 'N/A'}</p>
+            <p><strong>Service:</strong> ${r.service || 'N/A'}</p>
+            <p><strong>Parts:</strong> ${r.parts || 'N/A'}</p>
+            <p><strong>Notes:</strong> ${r.notes || ''}</p>
           `;
-          container.appendChild(card);
+          container.appendChild(row);
         });
-      } catch(err) {
-        console.error("Error loading maintenance history:", err);
-        container.innerHTML = "<p>Error loading maintenance records.</p>";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("historyList").innerHTML = "<p>Error loading records.</p>";
       }
     });
   </script>
@@ -51,9 +49,8 @@
 <body>
   <header>Maintenance History</header>
   <main>
-    <div id="historyContainer">
-      <p>Loading...</p>
-    </div>
+    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
+    <div id="historyList"></div>
   </main>
   <footer>&copy; 2026 Woods Garage</footer>
 </body>

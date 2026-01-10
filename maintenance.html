@@ -2,30 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Maintenance Record</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <title>Add Maintenance</title>
   <link rel="stylesheet" href="style.css">
+  <script src="app.js"></script>
   <script>
-    // Replace with your Apps Script Web App URL (no ?sheet needed for POST)
     const API_URL = "YOUR_WEB_APP_URL_HERE";
 
-    // Get URL parameter
-    function getQueryParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
-
-    // Submit maintenance record
-    async function submitMaintenance(event) {
-      event.preventDefault();
-
-      const vin = getQueryParam("vin"); // grab VIN from URL
-      if (!vin) {
-        alert("VIN missing from URL. Cannot submit record.");
-        return;
-      }
+    async function submitMaintenance(e) {
+      e.preventDefault();
+      const vin = getQueryParam("vin");
+      if (!vin) { alert("VIN missing"); return; }
 
       const data = {
-        vin: vin.toString().trim(), // ensure VIN is a string with no extra spaces
+        vin: vin.toString().trim(),
         odometer: document.getElementById("odometer").value,
         service: document.getElementById("service").value,
         parts: document.getElementById("parts").value,
@@ -33,64 +22,34 @@
       };
 
       try {
-        const response = await fetch(API_URL, {
+        const res = await fetch(API_URL, {
           method: "POST",
           body: JSON.stringify(data)
         });
-
-        const result = await response.json();
-
+        const result = await res.json();
         if (result.status === "success") {
-          alert("Maintenance record added successfully!");
+          alert("Maintenance added!");
           document.getElementById("maintenanceForm").reset();
-        } else {
-          alert("Error adding record: " + (result.message || "Unknown error"));
-        }
-      } catch (error) {
-        console.error("Error submitting maintenance record:", error);
-        alert("Error submitting record. Check console for details.");
+        } else alert("Error adding maintenance");
+      } catch(err) {
+        console.error(err); alert("Error adding maintenance");
       }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // Attach submit handler
-      const form = document.getElementById("maintenanceForm");
-      form.addEventListener("submit", submitMaintenance);
-
-      // Optional: show VIN on the page
-      const vin = getQueryParam("vin");
-      if (vin) {
-        document.getElementById("vehicleVIN").textContent = vin.toString().trim();
-      }
+      document.getElementById("maintenanceForm").addEventListener("submit", submitMaintenance);
     });
   </script>
 </head>
 <body>
-  <header>Add Maintenance Record</header>
+  <header>Add Maintenance</header>
   <main>
-    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
     <form id="maintenanceForm">
-      <label>
-        Odometer:<br>
-        <input type="number" id="odometer" required>
-      </label><br><br>
-
-      <label>
-        Service:<br>
-        <input type="text" id="service" required>
-      </label><br><br>
-
-      <label>
-        Parts:<br>
-        <input type="text" id="parts">
-      </label><br><br>
-
-      <label>
-        Notes:<br>
-        <textarea id="notes"></textarea>
-      </label><br><br>
-
-      <button type="submit">Add Record</button>
+      <label>Odometer Reading:<input type="number" id="odometer" required></label>
+      <label>Service:<input type="text" id="service" required></label>
+      <label>Parts:<input type="text" id="parts"></label>
+      <label>Notes:<textarea id="notes"></textarea></label>
+      <button type="submit">Add Maintenance</button>
     </form>
   </main>
   <footer>&copy; 2026 Woods Garage</footer>

@@ -1,7 +1,7 @@
 // ---------------------------
 // CONFIG
 // ---------------------------
-const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Google Apps Script URL
+const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Vehicles"; // Replace with your Google Apps Script URL
 
 // ---------------------------
 // HELPER: Get query parameter
@@ -176,3 +176,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("maintenanceForm")) loadMaintenanceForm();
   if (document.getElementById("maintenanceHistory")) loadMaintenanceHistory();
 });
+

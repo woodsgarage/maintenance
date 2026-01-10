@@ -1,57 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Maintenance History</title>
+  <title>History</title>
   <link rel="stylesheet" href="style.css">
-  <script src="app.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const vin = getQueryParam("vin");
-      if (!vin) {
-        alert("VIN missing in URL");
-        return;
-      }
-      document.getElementById("vehicleVIN").textContent = vin;
-
-      try {
-        const res = await fetch(`${API_URL}?sheet=Maintenance`);
-        const records = await res.json();
-        const vehicleRecords = records.filter(r => (r.vin || "").trim() === vin.trim());
-
-        const container = document.getElementById("historyList");
-        if (!vehicleRecords.length) {
-          container.innerHTML = "<p>No maintenance records found.</p>";
-          return;
-        }
-
-        container.innerHTML = "";
-        vehicleRecords.forEach(r => {
-          const row = document.createElement("div");
-          const date = new Date(r.timestamp);
-          row.className = "vehicle-card";
-          row.innerHTML = `
-            <p><strong>Date:</strong> ${date.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}</p>
-            <p><strong>Odometer:</strong> ${r.odometer || 'N/A'}</p>
-            <p><strong>Service:</strong> ${r.service || 'N/A'}</p>
-            <p><strong>Parts:</strong> ${r.parts || 'N/A'}</p>
-            <p><strong>Notes:</strong> ${r.notes || ''}</p>
-          `;
-          container.appendChild(row);
-        });
-      } catch (err) {
-        console.error(err);
-        document.getElementById("historyList").innerHTML = "<p>Error loading records.</p>";
-      }
-    });
-  </script>
 </head>
 <body>
-  <header>Maintenance History</header>
-  <main>
-    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
-    <div id="historyList"></div>
-  </main>
-  <footer>&copy; 2026 Woods Garage</footer>
+
+<h1>Maintenance History</h1>
+<div id="results"></div>
+
+<script src="app.js"></script>
+<script>
+const vin = new URLSearchParams(location.search).get("vin");
+
+loadJSONP(`${API_URL}?sheet=Maintenance`, "historyLoaded")
+.then(records => {
+  const out = document.getElementById("results");
+  const list = records.filter(r => r.vin === vin);
+
+  if (!list.length) {
+    out.textContent = "No records found";
+    return;
+  }
+
+  list.forEach(r => {
+    const d = new Date(r.timestamp);
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `
+      <strong>${d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</strong><br>
+      ${r.service}<br>
+      Parts: ${r.parts}<br>
+      Notes: ${r.notes}
+    `;
+    out.appendChild(c);
+  });
+});
+</script>
+
 </body>
 </html>

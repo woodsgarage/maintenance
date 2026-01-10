@@ -6,6 +6,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script defer>
+    // Format timestamp to "Month Day, Year"
+function formatDate(ts) {
+  if (!ts) return "N/A";
+  const date = new Date(ts);
+  if (isNaN(date)) return ts; // fallback if invalid date
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+}
     // ---------------------------
     // CONFIG: Google Apps Script URL
     // ---------------------------
@@ -68,7 +76,7 @@
           const card = document.createElement("div");
           card.className = "vehicle-card";
           card.innerHTML = `
-            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Date:</strong> ${formatDate(record.timestamp)}</p>
             <p><strong>Mileage:</strong> ${mileage}</p>
             <p><strong>Service:</strong> ${service}</p>
             <p><strong>Parts:</strong> ${parts}</p>

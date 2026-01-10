@@ -4,11 +4,31 @@
   <meta charset="UTF-8">
   <title>Schedule Future Maintenance</title>
   <link rel="stylesheet" href="style.css">
+  <script src="app.js"></script>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec";          // POST endpoint for scheduled maintenance
+    const EMAILS_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?emails=true"; // GET endpoint for contacts
 
     function getQueryParam(name) {
       return new URLSearchParams(window.location.search).get(name);
+    }
+
+    async function loadEmails() {
+      try {
+        const response = await fetch(EMAILS_API_URL);
+        const data = await response.json();
+        const select = document.getElementById("emailSelect");
+        if (!select) return;
+
+        data.forEach(entry => {
+          const option = document.createElement("option");
+          option.value = entry.email;
+          option.textContent = `${entry.name} (${entry.email})`;
+          select.appendChild(option);
+        });
+      } catch(err) {
+        console.error("Error loading emails:", err);
+      }
     }
 
     async function submitSchedule(event) {
@@ -21,11 +41,12 @@
         vin: vin.toString().trim(),
         planned_date: document.getElementById("plannedDate").value,
         service: document.getElementById("service").value,
-        notes: document.getElementById("notes").value
+        notes: document.getElementById("notes").value,
+        email: document.getElementById("emailSelect").value
       };
 
-      if (!data.planned_date || !data.service) {
-        alert("Please fill in the planned date and service type.");
+      if (!data.planned_date || !data.service || !data.email) {
+        alert("Please fill in the planned date, service type, and select an email.");
         return;
       }
 
@@ -48,9 +69,12 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("scheduleForm").addEventListener("submit", submitSchedule);
       const vin = getQueryParam("vin");
       if (vin) document.getElementById("vehicleVIN").textContent = vin.toString().trim();
+
+      document.getElementById("scheduleForm").addEventListener("submit", submitSchedule);
+
+      loadEmails(); // Populate email dropdown
     });
   </script>
 </head>
@@ -63,14 +87,24 @@
         Planned Date:<br>
         <input type="date" id="plannedDate" required>
       </label><br>
+
       <label>
         Service Type:<br>
         <input type="text" id="service" required>
       </label><br>
+
       <label>
         Notes:<br>
         <textarea id="notes"></textarea>
       </label><br>
+
+      <label>
+        Reminder Email:<br>
+        <select id="emailSelect" required>
+          <option value="">Select an email...</option>
+        </select>
+      </label><br>
+
       <button type="submit">Schedule Maintenance</button>
     </form>
   </main>

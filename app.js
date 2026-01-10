@@ -1,11 +1,13 @@
 // ============================
-// Configuration
+// CONFIGURATION
 // ============================
 const VEHICLES_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Vehicles";
 const MAINTENANCE_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Maintenance";
+const SCHEDULE_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec"; // POST endpoint for schedule submissions
+const EMAILS_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?emails=true"; // GET endpoint for Contacts sheet
 
 // ============================
-// Utility Functions
+// UTILITY FUNCTIONS
 // ============================
 function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
@@ -15,12 +17,11 @@ function formatDate(ts) {
   if (!ts) return "N/A";
   const date = new Date(ts);
   if (isNaN(date)) return ts;
-  const options = { year: 'numeric', month: 'short', day: 'numeric' };
-  return date.toLocaleDateString(undefined, options);
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 // ============================
-// Vehicles Functions
+// VEHICLE LIST FUNCTIONS
 // ============================
 async function fetchVehicles() {
   try {
@@ -36,8 +37,8 @@ async function fetchVehicles() {
 function displayVehicles(vehicles) {
   const container = document.getElementById("vehicle-list");
   if (!container) return;
-
   container.innerHTML = "";
+
   if (!vehicles.length) {
     container.innerHTML = "<p>No vehicles found.</p>";
     return;
@@ -69,7 +70,7 @@ async function loadVehiclesPage() {
 }
 
 // ============================
-// Maintenance Functions
+// MAINTENANCE FUNCTIONS
 // ============================
 async function fetchMaintenanceRecords() {
   try {
@@ -113,7 +114,7 @@ function displayMaintenance(records, containerId) {
 }
 
 // ============================
-// Vehicle.html Button Bindings
+// VEHICLE DASHBOARD BUTTONS
 // ============================
 function bindVehicleButtons() {
   const vin = getQueryParam("vin");
@@ -135,12 +136,84 @@ function bindVehicleButtons() {
 }
 
 // ============================
-// Initialization
+// SCHEDULE EMAILS DROPDOWN
+// ============================
+async function loadEmailsDropdown(selectId) {
+  try {
+    const response = await fetch(EMAILS_API_URL);
+    const data = await response.json();
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    data.forEach(entry => {
+      const option = document.createElement("option");
+      option.value = entry.email;
+      option.textContent = `${entry.name} (${entry.email})`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading emails:", err);
+  }
+}
+
+// ============================
+// SCHEDULE FORM SUBMISSION
+// ============================
+async function submitScheduleForm(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const vin = getQueryParam("vin");
+    if (!vin) { alert("VIN missing"); return; }
+
+    const data = {
+      type: "future",
+      vin: vin.toString().trim(),
+      planned_date: document.getElementById("plannedDate").value,
+      service: document.getElementById("service").value,
+      notes: document.getElementById("notes").value,
+      email: document.getElementById("emailSelect").value
+    };
+
+    if (!data.planned_date || !data.service || !data.email) {
+      alert("Please fill in date, service, and select an email.");
+      return;
+    }
+
+    try {
+      const response = await fetch(SCHEDULE_API_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        alert("Future maintenance scheduled successfully!");
+        form.reset();
+      } else {
+        alert("Error scheduling maintenance: " + (result.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Error submitting schedule:", err);
+      alert("Error submitting schedule. Check console for details.");
+    }
+  });
+}
+
+// ============================
+// INITIALIZATION
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
+  // Vehicle list page
   if (document.getElementById("vehicle-list")) loadVehiclesPage();
+
+  // Vehicle dashboard buttons
   if (document.getElementById("addMaintenanceBtn") ||
       document.getElementById("viewHistoryBtn") ||
       document.getElementById("scheduleBtn")) bindVehicleButtons();
-});
 
+  // Schedule page email dropdown & form
+  if (document.getElementById("emailSelect")) loadEmailsDropdown("emailSelect");
+  if (document.getElementById("scheduleForm")) submitScheduleForm("scheduleForm");
+});

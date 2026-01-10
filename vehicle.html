@@ -2,14 +2,82 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Vehicle Dashboard</title>
+  <title>Vehicle Dashboard - Test</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <script defer>
+    // ---------------------------
+    // CONFIG
+    // ---------------------------
+    const API_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE/exec"; // Replace with your Apps Script URL
+
+    // ---------------------------
+    // HELPER: Get query parameter
+    // ---------------------------
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // ---------------------------
+    // VEHICLE DASHBOARD WITH DEBUGGING
+    // ---------------------------
+    async function loadVehicleDashboard() {
+      const vin = getQueryParam("vin");
+      console.log("VIN from URL:", vin); // Debug
+
+      if (!vin) {
+        document.getElementById("vehicleTitle").textContent = "No VIN provided!";
+        return;
+      }
+
+      try {
+        const response = await fetch(API_URL);
+        const vehicles = await response.json();
+        console.log("Vehicles from API:", vehicles); // Debug
+
+        // Match vehicle by VIN (trim spaces)
+        const vehicle = vehicles.find(v => (v.vin || v.VIN).trim() === vin.trim());
+        console.log("Matched vehicle:", vehicle); // Debug
+
+        if (!vehicle) {
+          document.getElementById("vehicleTitle").textContent = "Vehicle not found!";
+          return;
+        }
+
+        // Update dashboard title
+        document.getElementById("vehicleTitle").textContent =
+          `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+
+        // Set up buttons
+        const addBtn = document.getElementById("addMaintenanceBtn");
+        const historyBtn = document.getElementById("viewHistoryBtn");
+
+        if (addBtn) addBtn.onclick = () => {
+          window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+        };
+
+        if (historyBtn) historyBtn.onclick = () => {
+          window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+        };
+
+      } catch (error) {
+        console.error("Error loading vehicle dashboard:", error);
+        document.getElementById("vehicleTitle").textContent = "Error loading vehicle!";
+      }
+    }
+
+    // ---------------------------
+    // INIT
+    // ---------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      loadVehicleDashboard();
+    });
+  </script>
 </head>
 <body>
   <header>
-    Vehicle Dashboard
+    Vehicle Dashboard - Test
   </header>
 
   <main>
@@ -19,6 +87,10 @@
       <button id="addMaintenanceBtn">Add Maintenance Record</button>
       <button id="viewHistoryBtn">View Maintenance History</button>
     </div>
+
+    <p style="margin-top: 2rem; color: gray; font-size: 0.9rem;">
+      Open the browser console (F12) to see VIN and API debug info.
+    </p>
   </main>
 
   <footer>

@@ -1,39 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Maintenance</title>
+  <title>Add Maintenance Record</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <script>
+    // Replace with your Apps Script Web App URL (no ?sheet needed for POST)
+    const API_URL = "YOUR_WEB_APP_URL_HERE";
+
+    // Get URL parameter
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    // Submit maintenance record
+    async function submitMaintenance(event) {
+      event.preventDefault();
+
+      const vin = getQueryParam("vin"); // grab VIN from URL
+      if (!vin) {
+        alert("VIN missing from URL. Cannot submit record.");
+        return;
+      }
+
+      const data = {
+        vin: vin.toString().trim(), // ensure VIN is a string with no extra spaces
+        odometer: document.getElementById("odometer").value,
+        service: document.getElementById("service").value,
+        parts: document.getElementById("parts").value,
+        notes: document.getElementById("notes").value
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          alert("Maintenance record added successfully!");
+          document.getElementById("maintenanceForm").reset();
+        } else {
+          alert("Error adding record: " + (result.message || "Unknown error"));
+        }
+      } catch (error) {
+        console.error("Error submitting maintenance record:", error);
+        alert("Error submitting record. Check console for details.");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Attach submit handler
+      const form = document.getElementById("maintenanceForm");
+      form.addEventListener("submit", submitMaintenance);
+
+      // Optional: show VIN on the page
+      const vin = getQueryParam("vin");
+      if (vin) {
+        document.getElementById("vehicleVIN").textContent = vin.toString().trim();
+      }
+    });
+  </script>
 </head>
 <body>
-  <header>
-    Add Maintenance
-  </header>
-
+  <header>Add Maintenance Record</header>
   <main>
-    <h1 id="maintenanceVehicleTitle">Loading vehicle...</h1>
-
+    <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
     <form id="maintenanceForm">
-      <label for="date">Date</label>
-      <input type="date" id="date" name="date" required>
+      <label>
+        Odometer:<br>
+        <input type="number" id="odometer" required>
+      </label><br><br>
 
-      <label for="mileage">Mileage</label>
-      <input type="number" id="mileage" name="mileage" required>
+      <label>
+        Service:<br>
+        <input type="text" id="service" required>
+      </label><br><br>
 
-      <label for="description">Description</label>
-      <textarea id="description" name="description" required></textarea>
+      <label>
+        Parts:<br>
+        <input type="text" id="parts">
+      </label><br><br>
 
-      <label for="parts">Parts</label>
-      <textarea id="parts" name="parts"></textarea>
+      <label>
+        Notes:<br>
+        <textarea id="notes"></textarea>
+      </label><br><br>
 
-      <button type="submit">Submit Maintenance</button>
+      <button type="submit">Add Record</button>
     </form>
   </main>
-
-  <footer>
-    &copy; 2026 Woods Garage
-  </footer>
+  <footer>&copy; 2026 Woods Garage</footer>
 </body>
 </html>

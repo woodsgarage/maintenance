@@ -37,11 +37,11 @@ function displayVehicles(vehicles) {
     const card = document.createElement("div");
     card.className = "vehicle-card";
     card.innerHTML = `
-      <h2>${vehicle.name} (${vehicle.year})</h2>
-      <p><strong>Make:</strong> ${vehicle.make}</p>
-      <p><strong>Model:</strong> ${vehicle.model}</p>
-      <p><strong>VIN:</strong> ${vehicle.vin}</p>
-      <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
+      <h2>${vehicle.Name} (${vehicle.Year})</h2>
+      <p><strong>Make:</strong> ${vehicle.Make}</p>
+      <p><strong>Model:</strong> ${vehicle.Model}</p>
+      <p><strong>VIN:</strong> ${vehicle.VIN}</p>
+      <p><strong>Start Mileage:</strong> ${vehicle.Start_Mileage}</p>
     `;
     container.appendChild(card);
   });
@@ -49,6 +49,7 @@ function displayVehicles(vehicles) {
 
 // Load vehicles on page load
 fetchVehicles();
+
 
 
 

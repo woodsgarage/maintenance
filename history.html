@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="style.css">
   <script defer>
     // ---------------------------
-    // CONFIG
+    // CONFIG: Google Apps Script URL
     // ---------------------------
-    const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Apps Script URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Web App URL
 
     // ---------------------------
-    // Helper: Get query parameter
+    // Helper: Get URL parameter
     // ---------------------------
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -36,10 +36,10 @@
         console.log("VIN from URL:", vin);
         console.log("API response:", data);
 
-        // Handle array or object containing array
+        // Support API returning array or object with 'records'
         const records = Array.isArray(data) ? data : data.records || [];
 
-        // Filter records for this vehicle
+        // Filter records for the VIN (safe string conversion)
         const vehicleRecords = records.filter(r => {
           const recordVin = (r.vin || r.VIN || "").toString().trim();
           return recordVin === vin.trim();
@@ -53,27 +53,26 @@
           return;
         }
 
-        // Optionally display vehicle info in title
-        const firstRecord = vehicleRecords[0];
-        const vehicleName = (firstRecord.make || firstRecord.Make || "Vehicle") + " " + 
-                            (firstRecord.model || firstRecord.Model || "");
-        title.textContent = vehicleName + " Maintenance History";
+        // Optional: show VIN in page title
+        title.textContent = `Maintenance History for VIN ${vin}`;
 
-        // Render each record
+        // Render each maintenance record
         historyDiv.innerHTML = "";
         vehicleRecords.forEach(record => {
-          const date = record.date || record.Date || "N/A";
-          const mileage = record.mileage || record.Mileage || "N/A";
-          const description = record.description || record.Description || "N/A";
-          const parts = record.parts || record.Parts || "N/A";
+          const date = record.timestamp || "N/A";
+          const mileage = record.odometer || "N/A";
+          const service = record.service || "N/A";
+          const parts = record.parts || "N/A";
+          const notes = record.notes || "N/A";
 
           const card = document.createElement("div");
           card.className = "vehicle-card";
           card.innerHTML = `
             <p><strong>Date:</strong> ${date}</p>
             <p><strong>Mileage:</strong> ${mileage}</p>
-            <p><strong>Description:</strong> ${description}</p>
+            <p><strong>Service:</strong> ${service}</p>
             <p><strong>Parts:</strong> ${parts}</p>
+            <p><strong>Notes:</strong> ${notes}</p>
           `;
           historyDiv.appendChild(card);
         });
@@ -86,7 +85,7 @@
     }
 
     // ---------------------------
-    // Initialize
+    // Initialize page
     // ---------------------------
     document.addEventListener("DOMContentLoaded", () => {
       loadMaintenanceHistory();

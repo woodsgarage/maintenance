@@ -1,100 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Vehicle Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script defer>
-    // ---------------------------
-    // CONFIG
-    // ---------------------------
-    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Vehicles"; // Replace with your Apps Script URL
+  <script>
+    // Replace with your deployed Apps Script URL for Vehicles
+    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Vehicles";
 
-    // ---------------------------
-    // HELPER: Get query parameter
-    // ---------------------------
+    // Get URL parameter
     function getQueryParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
+      return new URLSearchParams(window.location.search).get(name);
     }
 
-    // ---------------------------
-    // VEHICLE DASHBOARD WITH DEBUGGING
-    // ---------------------------
+    // Fetch vehicle data from Google Sheets API
     async function loadVehicleDashboard() {
-      const vin = getQueryParam("vin");
-      console.log("VIN from URL:", vin); // Debug
+      const vinParam = getQueryParam("vin");
+      const container = document.getElementById("vehicleDashboard");
 
-      if (!vin) {
-        document.getElementById("vehicleTitle").textContent = "No VIN provided!";
+      if (!vinParam) {
+        container.innerHTML = "<p>VIN missing from URL.</p>";
         return;
       }
 
       try {
         const response = await fetch(API_URL);
-        const vehicles = await response.json();
-        console.log("Vehicles from API:", vehicles); // Debug
+        const data = await response.json();
 
-        // Match vehicle by VIN (trim spaces)
-        const vehicle = vehicles.find(v => (v.vin || v.VIN).trim() === vin.trim());
-        console.log("Matched vehicle:", vehicle); // Debug
-
+        const vehicle = data.find(v => ((v.vin || v.VIN || "").toString().trim() === vinParam.trim()));
         if (!vehicle) {
-          document.getElementById("vehicleTitle").textContent = "Vehicle not found!";
+          container.innerHTML = "<p>Vehicle not found.</p>";
           return;
         }
 
-        // Update dashboard title
-        document.getElementById("vehicleTitle").textContent =
-          `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+        container.innerHTML = `
+          <h2>${vehicle.name} (${vehicle.year})</h2>
+          <p><strong>Make:</strong> ${vehicle.make}</p>
+          <p><strong>Model:</strong> ${vehicle.model}</p>
+          <p><strong>VIN:</strong> ${vehicle.vin}</p>
+          <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
 
-        // Set up buttons
-        const addBtn = document.getElementById("addMaintenanceBtn");
-        const historyBtn = document.getElementById("viewHistoryBtn");
-
-        if (addBtn) addBtn.onclick = () => {
-          window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
-        };
-
-        if (historyBtn) historyBtn.onclick = () => {
-          window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-        };
-
+          <div class="button-group">
+            <button id="addMaintenanceBtn">Add Maintenance</button>
+            <button id="viewHistoryBtn">View Maintenance History</button>
+            <button id="scheduleBtn">Schedule Maintenance</button>
+          </div>
+        `;
       } catch (error) {
         console.error("Error loading vehicle dashboard:", error);
-        document.getElementById("vehicleTitle").textContent = "Error loading vehicle!";
+        container.innerHTML = "<p>Error loading vehicle information.</p>";
       }
     }
 
-    // ---------------------------
-    // INIT
-    // ---------------------------
     document.addEventListener("DOMContentLoaded", () => {
       loadVehicleDashboard();
+
+      const vin = getQueryParam("vin");
+
+      // Add Maintenance button
+      document.addEventListener("click", e => {
+        if (e.target && e.target.id === "addMaintenanceBtn" && vin) {
+          window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+        }
+
+        // View History button
+        if (e.target && e.target.id === "viewHistoryBtn" && vin) {
+          window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+        }
+
+        // Schedule Maintenance button
+        if (e.target && e.target.id === "scheduleBtn" && vin) {
+          window.location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+        }
+      });
     });
   </script>
+  <style>
+    body {
+      font-family: Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background: #0d6efd;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+    main {
+      padding: 1rem;
+    }
+    #vehicleDashboard {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 1rem auto;
+    }
+    .button-group {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .button-group button {
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      flex: 1 1 150px;
+    }
+    .button-group button:hover {
+      background-color: #0b5ed7;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      background: #ddd;
+      margin-top: 2rem;
+    }
+    @media (max-width: 600px) {
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header>
-    Vehicle Dashboard - Test
-  </header>
-
+  <header>Vehicle Dashboard</header>
   <main>
-    <h1 id="vehicleTitle">Loading vehicle...</h1>
-
-    <div class="dashboard-options">
-      <button id="addMaintenanceBtn">Add Maintenance Record</button>
-      <button id="viewHistoryBtn">View Maintenance History</button>
+    <div id="vehicleDashboard">
+      <p>Loading vehicle...</p>
     </div>
-
-    <p style="margin-top: 2rem; color: gray; font-size: 0.9rem;">
-      Open the browser console (F12) to see VIN and API debug info.
-    </p>
   </main>
-
-  <footer>
-    &copy; 2026 Woods Garage
-  </footer>
+  <footer>&copy; 2026 Woods Garage</footer>
 </body>
 </html>

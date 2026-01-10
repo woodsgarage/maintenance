@@ -2,108 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Schedule Future Maintenance</title>
+  <title>Schedule Maintenance</title>
   <link rel="stylesheet" href="style.css">
   <script src="app.js"></script>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec";          // POST endpoint for scheduled maintenance
-    const EMAILS_API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?emails=true"; // GET endpoint for contacts
+    document.addEventListener("DOMContentLoaded", async () => {
+      const vin = getQueryParam("vin");
+      if (!vin) {
+        alert("VIN missing in URL");
+        return;
+      }
+      document.getElementById("vehicleVIN").textContent = vin;
 
-    function getQueryParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
+      // Load emails into dropdown
+      await loadEmails();
 
+      // Handle form submission
+      document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const plannedDate = document.getElementById("plannedDate").value;
+        const service = document.getElementById("service").value;
+        const notes = document.getElementById("notes").value;
+        const email = document.getElementById("emailSelect").value;
+
+        if (!plannedDate || !service || !email) {
+          alert("Please fill in all required fields.");
+          return;
+        }
+
+        try {
+          const data = {
+            type: "future",
+            vin,
+            planned_date: plannedDate,
+            service,
+            notes,
+            email
+          };
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+          if (result.status === "success") {
+            alert("Maintenance scheduled successfully!");
+            document.getElementById("scheduleForm").reset();
+          } else {
+            alert("Error scheduling maintenance.");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Failed to schedule maintenance.");
+        }
+      });
+    });
+
+    // Load emails into dropdown from Contacts sheet
     async function loadEmails() {
       try {
-        const response = await fetch(EMAILS_API_URL);
-        const data = await response.json();
+        const response = await fetch(`${API_URL}?emails=true`);
+        const contacts = await response.json();
         const select = document.getElementById("emailSelect");
-        if (!select) return;
 
-        data.forEach(entry => {
+        contacts.forEach(c => {
           const option = document.createElement("option");
-          option.value = entry.email;
-          option.textContent = `${entry.name} (${entry.email})`;
+          option.value = c.email;
+          option.textContent = `${c.name} (${c.email})`;
           select.appendChild(option);
         });
-      } catch(err) {
+      } catch (err) {
         console.error("Error loading emails:", err);
       }
     }
-
-    async function submitSchedule(event) {
-      event.preventDefault();
-      const vin = getQueryParam("vin");
-      if (!vin) { alert("VIN missing"); return; }
-
-      const data = {
-        type: "future",
-        vin: vin.toString().trim(),
-        planned_date: document.getElementById("plannedDate").value,
-        service: document.getElementById("service").value,
-        notes: document.getElementById("notes").value,
-        email: document.getElementById("emailSelect").value
-      };
-
-      if (!data.planned_date || !data.service || !data.email) {
-        alert("Please fill in the planned date, service type, and select an email.");
-        return;
-      }
-
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        if (result.status === "success") {
-          alert("Future maintenance scheduled successfully!");
-          document.getElementById("scheduleForm").reset();
-        } else {
-          alert("Error scheduling maintenance: " + (result.message || "Unknown error"));
-        }
-      } catch (error) {
-        console.error("Error submitting schedule:", error);
-        alert("Error submitting schedule. Check console for details.");
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const vin = getQueryParam("vin");
-      if (vin) document.getElementById("vehicleVIN").textContent = vin.toString().trim();
-
-      document.getElementById("scheduleForm").addEventListener("submit", submitSchedule);
-
-      loadEmails(); // Populate email dropdown
-    });
   </script>
 </head>
 <body>
-  <header>Schedule Future Maintenance</header>
+  <header>Schedule Maintenance</header>
   <main>
     <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
+
     <form id="scheduleForm">
-      <label>
-        Planned Date:<br>
-        <input type="date" id="plannedDate" required>
-      </label><br>
+      <label for="plannedDate">Planned Date:</label>
+      <input type="date" id="plannedDate" required>
 
-      <label>
-        Service Type:<br>
-        <input type="text" id="service" required>
-      </label><br>
+      <label for="service">Service:</label>
+      <input type="text" id="service" placeholder="Oil Change, etc." required>
 
-      <label>
-        Notes:<br>
-        <textarea id="notes"></textarea>
-      </label><br>
+      <label for="notes">Notes:</label>
+      <textarea id="notes" placeholder="Optional notes"></textarea>
 
-      <label>
-        Reminder Email:<br>
-        <select id="emailSelect" required>
-          <option value="">Select an email...</option>
-        </select>
-      </label><br>
+      <label for="emailSelect">Send Reminder To:</label>
+      <select id="emailSelect" required>
+        <option value="">Select Email</option>
+      </select>
 
       <button type="submit">Schedule Maintenance</button>
     </form>

@@ -15,7 +15,7 @@
       document.getElementById("vehicleVIN").textContent = vin;
 
       // Load emails into dropdown
-      await loadEmails();
+      await populateEmailDropdown();
 
       // Handle form submission
       document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
@@ -32,7 +32,7 @@
 
         try {
           const data = {
-            type: "future",
+            type: "future",       // Ensures Apps Script writes to FutureMaintenance
             vin,
             planned_date: plannedDate,
             service,
@@ -60,7 +60,7 @@
     });
 
     // Load emails into dropdown from Contacts sheet
-    async function loadEmails() {
+    async function populateEmailDropdown() {
       try {
         const response = await fetch(`${API_URL}?emails=true`);
         const contacts = await response.json();
@@ -88,7 +88,7 @@
       <input type="date" id="plannedDate" required>
 
       <label for="service">Service:</label>
-      <input type="text" id="service" placeholder="Oil Change, etc." required>
+      <input type="text" id="service" placeholder="Oil Change, Tire Rotation..." required>
 
       <label for="notes">Notes:</label>
       <textarea id="notes" placeholder="Optional notes"></textarea>

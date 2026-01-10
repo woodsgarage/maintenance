@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Maintenance</title>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+
+<h1 id="vehicleTitle"></h1>
+
+<form id="maintenanceForm">
+  <input type="hidden" id="vin">
+
+  <label>
+    Odometer:
+    <input type="number" id="odometer" required>
+  </label><br><br>
+
+  <label>
+    Service Performed:
+    <input type="text" id="service" required>
+  </label><br><br>
+
+  <label>
+    Parts Used:
+    <input type="text" id="parts">
+  </label><br><br>
+
+  <label>
+    Notes:
+    <textarea id="notes"></textarea>
+  </label><br><br>
+
+  <button type="submit">Save Maintenance</button>
+</form>
+
+</body>
+</html>

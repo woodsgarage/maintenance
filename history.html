@@ -9,7 +9,7 @@
     // ---------------------------
     // CONFIG
     // ---------------------------
-    const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Apps Script Web App URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbweRW0iNKaGhtzgoB3KsoCGdWaHuIGb2v8JajWKVcVwBQQEbDu8y6mksrv5xRi2sc-Zjw/exec"; // Replace with your Apps Script URL
 
     // ---------------------------
     // Helper: Get query parameter
@@ -31,16 +31,21 @@
 
       try {
         const response = await fetch(API_URL);
-        const records = await response.json();
+        const data = await response.json();
 
         console.log("VIN from URL:", vin);
-        console.log("Maintenance records from API:", records);
+        console.log("API response:", data);
 
-        // Filter for this vehicle (safe string comparison)
+        // Handle array or object containing array
+        const records = Array.isArray(data) ? data : data.records || [];
+
+        // Filter records for this vehicle
         const vehicleRecords = records.filter(r => {
           const recordVin = (r.vin || r.VIN || "").toString().trim();
           return recordVin === vin.trim();
         });
+
+        console.log("Filtered vehicleRecords:", vehicleRecords);
 
         if (!vehicleRecords.length) {
           title.textContent = "No maintenance records found";
@@ -48,9 +53,58 @@
           return;
         }
 
-        // Update page title with vehicle info if available
-        const vehicle = vehicleRecords[0];
-        const vehicleName = (vehicle.make || vehicle.Make || "Vehicle") + " " + (vehicle.model || vehicle.Model || "");
+        // Optionally display vehicle info in title
+        const firstRecord = vehicleRecords[0];
+        const vehicleName = (firstRecord.make || firstRecord.Make || "Vehicle") + " " + 
+                            (firstRecord.model || firstRecord.Model || "");
         title.textContent = vehicleName + " Maintenance History";
 
-        // Display each
+        // Render each record
+        historyDiv.innerHTML = "";
+        vehicleRecords.forEach(record => {
+          const date = record.date || record.Date || "N/A";
+          const mileage = record.mileage || record.Mileage || "N/A";
+          const description = record.description || record.Description || "N/A";
+          const parts = record.parts || record.Parts || "N/A";
+
+          const card = document.createElement("div");
+          card.className = "vehicle-card";
+          card.innerHTML = `
+            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Mileage:</strong> ${mileage}</p>
+            <p><strong>Description:</strong> ${description}</p>
+            <p><strong>Parts:</strong> ${parts}</p>
+          `;
+          historyDiv.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error("Error loading maintenance history:", error);
+        title.textContent = "Error loading maintenance history";
+        historyDiv.innerHTML = "<p>Unable to load maintenance records.</p>";
+      }
+    }
+
+    // ---------------------------
+    // Initialize
+    // ---------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      loadMaintenanceHistory();
+    });
+  </script>
+</head>
+<body>
+  <header>
+    Maintenance History
+  </header>
+
+  <main>
+    <h1 id="historyVehicleTitle">Loading vehicle history...</h1>
+    <div id="maintenanceHistory" class="vehicle-list"></div>
+  </main>
+
+  <footer>
+    &copy; 2026 Woods Garage
+  </footer>
+</body>
+</html>

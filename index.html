@@ -1,24 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Woods Garage - Vehicles</title>
+  <title>Select Vehicle</title>
   <link rel="stylesheet" href="style.css">
-  <script src="app.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      fetchVehicles();
-    });
-  </script>
 </head>
 <body>
-  <header>Woods Garage</header>
-  <main>
-    <h2>Select a Vehicle</h2>
-    <div id="vehicle-list" class="vehicle-list">
-      <p>Loading vehicles...</p>
-    </div>
-  </main>
-  <footer>&copy; 2026 Woods Garage</footer>
+
+<h1>Select Vehicle</h1>
+<div id="vehicle-list"></div>
+
+<script src="app.js"></script>
+<script>
+loadJSONP(`${API_URL}?sheet=Vehicles`, "vehiclesLoaded")
+.then(data => {
+  const list = document.getElementById("vehicle-list");
+  data.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.innerHTML = `<strong>${v.year} ${v.make} ${v.model}</strong><br>VIN: ${v.vin}`;
+    d.onclick = () => location.href = `vehicle.html?vin=${encodeURIComponent(v.vin)}`;
+    list.appendChild(d);
+  });
+});
+</script>
+
 </body>
 </html>

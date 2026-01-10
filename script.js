@@ -1,5 +1,5 @@
 // Replace this with your Google Sheets API URL
-const API_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzVqy_P9-HXu6sw-ubiSWCFmRubLUkxv2BbH01cYO_ai--udIxoq0VltPpSfvtwacrsOA/exec";
 
 async function fetchVehicles() {
   try {
@@ -39,4 +39,5 @@ function displayVehicles(data) {
 }
 
 // Load vehicles on page load
+
 fetchVehicles();

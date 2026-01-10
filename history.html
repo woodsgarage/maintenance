@@ -5,20 +5,52 @@
   <title>Maintenance History</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
-</head>
-<body>
-  <header>
-    Maintenance History
-  </header>
+  <script defer>
+    // ---------------------------
+    // CONFIG
+    // ---------------------------
+    const API_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE/exec"; // Replace with your Apps Script Web App URL
 
-  <main>
-    <h1 id="historyVehicleTitle">Loading vehicle...</h1>
-    <div id="maintenanceHistory" class="vehicle-list"></div>
-  </main>
+    // ---------------------------
+    // Helper: Get query parameter
+    // ---------------------------
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
 
-  <footer>
-    &copy; 2026 Woods Garage
-  </footer>
-</body>
-</html>
+    // ---------------------------
+    // Load Maintenance History
+    // ---------------------------
+    async function loadMaintenanceHistory() {
+      const vin = getQueryParam("vin");
+      if (!vin) return;
+
+      const historyDiv = document.getElementById("maintenanceHistory");
+      const title = document.getElementById("historyVehicleTitle");
+
+      try {
+        const response = await fetch(API_URL);
+        const records = await response.json();
+
+        console.log("VIN from URL:", vin);
+        console.log("Maintenance records from API:", records);
+
+        // Filter for this vehicle (safe string comparison)
+        const vehicleRecords = records.filter(r => {
+          const recordVin = (r.vin || r.VIN || "").toString().trim();
+          return recordVin === vin.trim();
+        });
+
+        if (!vehicleRecords.length) {
+          title.textContent = "No maintenance records found";
+          historyDiv.innerHTML = "<p>No maintenance records found.</p>";
+          return;
+        }
+
+        // Update page title with vehicle info if available
+        const vehicle = vehicleRecords[0];
+        const vehicleName = (vehicle.make || vehicle.Make || "Vehicle") + " " + (vehicle.model || vehicle.Model || "");
+        title.textContent = vehicleName + " Maintenance History";
+
+        // Display each

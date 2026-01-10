@@ -3,84 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <title>Maintenance History</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="app.js"></script>
   <script>
-    // Replace with your deployed Apps Script URL for Maintenance
-    const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec?sheet=Maintenance";
+    const API_URL = "YOUR_WEB_APP_URL_HERE?sheet=Maintenance";
 
-    // Get URL parameter
-    function getQueryParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
-
-    // Format timestamp to "Month Day, Year"
-    function formatDate(ts) {
-      if (!ts) return "N/A";
-      const date = new Date(ts);
-      if (isNaN(date)) return ts; // fallback if invalid date
-      const options = { year: 'numeric', month: 'short', day: 'numeric' };
-      return date.toLocaleDateString(undefined, options);
-    }
-
-    async function loadMaintenanceHistory() {
+    document.addEventListener("DOMContentLoaded", async () => {
       const vin = getQueryParam("vin");
-      const title = document.getElementById("historyVehicleTitle");
-      const historyDiv = document.getElementById("maintenanceHistory");
+      const container = document.getElementById("historyContainer");
+      if (!vin || !container) return;
 
-      if (!vin) {
-        title.textContent = "VIN missing";
-        historyDiv.innerHTML = "<p>Cannot display maintenance records.</p>";
-        return;
-      }
+      container.innerHTML = "<p>Loading maintenance records...</p>";
 
       try {
         const response = await fetch(API_URL);
-        const data = await response.json();
-
-        const records = Array.isArray(data) ? data : [];
-
-        // Filter by VIN and sort newest first
-        const vehicleRecords = records
-          .filter(r => ((r.vin || r.VIN || "").toString().trim() === vin.trim()))
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const records = await response.json();
+        const vehicleRecords = records.filter(r => {
+          const recordVin = (r.vin || r.VIN || "").toString().trim();
+          return recordVin === vin.trim();
+        }).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         if (!vehicleRecords.length) {
-          title.textContent = `No maintenance records found for VIN ${vin}`;
-          historyDiv.innerHTML = "<p>No maintenance records found.</p>";
+          container.innerHTML = "<p>No maintenance records found.</p>";
           return;
         }
 
-        title.textContent = `Maintenance History for VIN ${vin}`;
-        historyDiv.innerHTML = "";
-
-        vehicleRecords.forEach(record => {
+        container.innerHTML = "";
+        vehicleRecords.forEach(r => {
           const card = document.createElement("div");
           card.className = "vehicle-card";
           card.innerHTML = `
-            <p><strong>Date:</strong> ${formatDate(record.timestamp)}</p>
-            <p><strong>Mileage:</strong> ${record.odometer || "N/A"}</p>
-            <p><strong>Service:</strong> ${record.service || "N/A"}</p>
-            <p><strong>Parts:</strong> ${record.parts || "N/A"}</p>
-            <p><strong>Notes:</strong> ${record.notes || "N/A"}</p>
+            <p><strong>Date:</strong> ${formatDate(r.timestamp)}</p>
+            <p><strong>Mileage:</strong> ${r.odometer || "N/A"}</p>
+            <p><strong>Service:</strong> ${r.service || "N/A"}</p>
+            <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>
+            <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
           `;
-          historyDiv.appendChild(card);
+          container.appendChild(card);
         });
-      } catch (error) {
-        console.error("Error loading maintenance history:", error);
-        title.textContent = "Error loading maintenance history";
-        historyDiv.innerHTML = "<p>Unable to load maintenance records.</p>";
+      } catch(err) {
+        console.error("Error loading maintenance history:", err);
+        container.innerHTML = "<p>Error loading maintenance records.</p>";
       }
-    }
-
-    document.addEventListener("DOMContentLoaded", loadMaintenanceHistory);
+    });
   </script>
 </head>
 <body>
   <header>Maintenance History</header>
   <main>
-    <h1 id="historyVehicleTitle">Loading vehicle history...</h1>
-    <div id="maintenanceHistory" class="vehicle-list"></div>
+    <div id="historyContainer">
+      <p>Loading...</p>
+    </div>
   </main>
   <footer>&copy; 2026 Woods Garage</footer>
 </body>

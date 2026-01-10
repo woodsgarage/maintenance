@@ -1,19 +1,10 @@
-// -----------------------------
-// Replace with your Web App URL
-// -----------------------------
-const API_URL = "https://script.google.com/macros/s/AKfycby6ebYaX33JVaysalB1JHmNmgywk6V7l6OFGvFuZ7Oe7BpZ_qiChnPAmbt68NEHazO7Fw/exec";
+const API_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
 
-// -----------------------------
-// Get URL query parameter
-// -----------------------------
 function getQueryParam(key) {
   const params = new URLSearchParams(window.location.search);
   return params.get(key);
 }
 
-// -----------------------------
-// Bind Vehicle Dashboard Buttons
-// -----------------------------
 function bindVehicleButtons() {
   const vin = getQueryParam("vin");
   if (!vin) return;
@@ -31,23 +22,17 @@ function bindVehicleButtons() {
   });
 }
 
-// -----------------------------
-// Fetch Vehicles (for index.html)
-// -----------------------------
 async function fetchVehicles() {
   try {
     const response = await fetch(`${API_URL}?sheet=Vehicles`);
     const data = await response.json();
     displayVehicles(data);
   } catch (err) {
-    console.error("Error fetching vehicles:", err);
+    console.error(err);
     document.getElementById("vehicle-list").innerHTML = "<p>Unable to load vehicles.</p>";
   }
 }
 
-// -----------------------------
-// Render Vehicle Cards (index.html)
-// -----------------------------
 function displayVehicles(vehicles) {
   const container = document.getElementById("vehicle-list");
   if (!container) return;
@@ -69,14 +54,11 @@ function displayVehicles(vehicles) {
   });
 }
 
-// -----------------------------
-// Load Emails for schedule.html
-// -----------------------------
 async function loadEmails() {
   try {
     const response = await fetch(`${API_URL}?emails=true`);
     const contacts = await response.json();
-    return contacts; // array of {name, email}
+    return contacts;
   } catch (err) {
     console.error("Error loading emails:", err);
     return [];

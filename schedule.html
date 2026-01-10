@@ -14,10 +14,8 @@
       }
       document.getElementById("vehicleVIN").textContent = vin;
 
-      // Load emails into dropdown
       await populateEmailDropdown();
 
-      // Handle form submission
       document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const plannedDate = document.getElementById("plannedDate").value;
@@ -32,7 +30,7 @@
 
         try {
           const data = {
-            type: "future",       // Ensures Apps Script writes to FutureMaintenance
+            type: "future",
             vin,
             planned_date: plannedDate,
             service,
@@ -59,7 +57,6 @@
       });
     });
 
-    // Load emails into dropdown from Contacts sheet
     async function populateEmailDropdown() {
       try {
         const response = await fetch(`${API_URL}?emails=true`);
@@ -82,7 +79,6 @@
   <header>Schedule Maintenance</header>
   <main>
     <h2>Vehicle VIN: <span id="vehicleVIN">Loading...</span></h2>
-
     <form id="scheduleForm">
       <label for="plannedDate">Planned Date:</label>
       <input type="date" id="plannedDate" required>

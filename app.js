@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycby778bf92jhgKmFbhKrXo5uZNRWyrYRy4gi-AJ-0A2q-WENV-jQrj54P2tt-u6V49nbOQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwNi_ezIjDt4pR4RRSPYEiWNDYbzk_uCG8NVI8euzTnFoo7B8C9IFAhYbRUduL6-CX11g/exec";
 
 function getQueryParam(key) {
   const params = new URLSearchParams(window.location.search);
@@ -64,5 +64,6 @@ async function loadEmails() {
     return [];
   }
 }
+
 
 

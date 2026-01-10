@@ -2,16 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Select a Vehicle</title>
+  <title>Vehicle List</title>
   <link rel="stylesheet" href="style.css">
   <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const container = document.getElementById("vehicle-list");
+      if (!container) return;
+
+      container.innerHTML = "<p>Loading vehicles...</p>";
+
+      try {
+        const response = await fetch(VEHICLES_API_URL);
+        const vehicles = await response.json();
+
+        if (!vehicles.length) {
+          container.innerHTML = "<p>No vehicles found.</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+
+        vehicles.forEach(vehicle => {
+          const card = document.createElement("div");
+          card.className = "vehicle-card";
+
+          // Entire card clickable
+          card.innerHTML = `
+            <h2>${vehicle.name} (${vehicle.year})</h2>
+            <p><strong>Make:</strong> ${vehicle.make}</p>
+            <p><strong>Model:</strong> ${vehicle.model}</p>
+            <p><strong>VIN:</strong> ${vehicle.vin}</p>
+          `;
+
+          card.addEventListener("click", () => {
+            window.location.href = `vehicle.html?vin=${encodeURIComponent(vehicle.vin)}`;
+          });
+
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error("Error loading vehicles:", err);
+        container.innerHTML = "<p>Unable to load vehicles.</p>";
+      }
+    });
+  </script>
 </head>
 <body>
-  <header>Woods Garage - Vehicles</header>
+  <header>My Vehicles</header>
   <main>
-    <div id="vehicle-list">
-      <p>Loading vehicles...</p>
-    </div>
+    <h2>Select a Vehicle</h2>
+    <div id="vehicle-list" class="vehicle-list"></div>
   </main>
   <footer>&copy; 2026 Woods Garage</footer>
 </body>

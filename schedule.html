@@ -12,109 +12,94 @@
 </header>
 
 <main class="container">
-  <form id="scheduleForm" class="card">
-    <label for="service">Service</label>
-    <input type="text" id="service" required>
+  <div class="card">
+    <form id="scheduleForm" method="POST" target="hidden_iframe">
+      <!-- Hidden fields -->
+      <input type="hidden" name="type" value="schedule">
+      <input type="hidden" name="vin" id="vinField">
 
-    <label for="plannedDate">Planned Date</label>
-    <input type="date" id="plannedDate" required>
+      <label for="service">Service</label>
+      <input type="text" name="service" id="service" required>
 
-    <label for="assignedEmail">Send Reminder To</label>
-    <select id="assignedEmail" required>
-      <option value="">Loading contacts...</option>
-    </select>
+      <label for="due_date">Planned Date</label>
+      <input type="date" name="due_date" id="due_date" required>
 
-    <fieldset>
-      <legend>Notification Intervals (days before planned date)</legend>
-      <label><input type="checkbox" value="14">14</label>
-      <label><input type="checkbox" value="7">7</label>
-      <label><input type="checkbox" value="3">3</label>
-      <label><input type="checkbox" value="1">1</label>
-    </fieldset>
+      <label for="email">Assign Email</label>
+      <select name="email" id="email" required>
+        <option value="">Select Email</option>
+      </select>
 
-    <button type="submit">Schedule Maintenance</button>
-  </form>
+      <fieldset>
+        <legend>Notification Intervals (days before)</legend>
+        <label><input type="checkbox" name="notify_14" value="yes">14 days</label>
+        <label><input type="checkbox" name="notify_7" value="yes">7 days</label>
+        <label><input type="checkbox" name="notify_3" value="yes">3 days</label>
+        <label><input type="checkbox" name="notify_1" value="yes">1 day</label>
+      </fieldset>
+
+      <button type="submit">Save Schedule</button>
+    </form>
+  </div>
 </main>
 
 <footer>
   &copy; 2026 Woods Garage Maintenance
 </footer>
 
-<script src="app.js"></script>
+<!-- Hidden iframe for form submission -->
+<iframe name="hidden_iframe" style="display:none;"></iframe>
+
 <script>
-const vin = new URLSearchParams(window.location.search).get("vin");
-
-// Populate email dropdown from Contacts sheet
-async function loadEmails() {
-  try {
-    const response = await fetch(`${API_URL}?sheet=Contacts`);
-    const contacts = await response.json();
-    const select = document.getElementById("assignedEmail");
-    select.innerHTML = '<option value="">Select email...</option>';
-
-    contacts.forEach(c => {
-      const email = (c.email || "").trim();
-      const name = (c.name || "").trim();
-      if (email) {
-        const option = document.createElement("option");
-        option.value = email;
-        option.textContent = name ? `${name} (${email})` : email;
-        select.appendChild(option);
-      }
-    });
-  } catch (err) {
-    console.error("Error loading contacts:", err);
-    document.getElementById("assignedEmail").innerHTML =
-      '<option value="">Unable to load contacts</option>';
+  const vin = new URLSearchParams(window.location.search).get("vin");
+  if (!vin) {
+    alert("Vehicle VIN not found. Cannot schedule maintenance.");
+  } else {
+    document.getElementById("vinField").value = vin;
   }
-}
 
-// Handle form submission
-document.addEventListener("DOMContentLoaded", () => {
-  loadEmails();
+  const form = document.getElementById("scheduleForm");
+  const iframe = document.getElementsByName("hidden_iframe")[0];
 
-  document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // Redirect after submission
+  iframe.onload = function() {
+    if (form.dataset.submitted === "true") {
+      window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+    }
+  };
 
-    const service = document.getElementById("service").value;
-    const plannedDate = document.getElementById("plannedDate").value;
-    const assignedEmail = document.getElementById("assignedEmail").value;
-
-    // Get selected notification intervals
-    const checkboxes = document.querySelectorAll("fieldset input[type=checkbox]:checked");
-    const intervals = Array.from(checkboxes).map(cb => parseInt(cb.value));
-
-    if (!service || !plannedDate || !assignedEmail || intervals.length === 0) {
-      alert("Please fill all fields and select at least one notification interval.");
+  form.addEventListener("submit", function() {
+    if (!vin) {
+      event.preventDefault();
       return;
     }
-
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          vin,
-          service,
-          plannedDate,
-          assignedEmail,
-          intervals
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.status === "success") {
-        alert("Maintenance scheduled successfully!");
-        window.location.href = `vehicle.html?vin=${vin}`;
-      } else {
-        alert("Failed to schedule maintenance.");
-      }
-    } catch (err) {
-      console.error("Error scheduling maintenance:", err);
-      alert("Error scheduling maintenance.");
-    }
+    form.dataset.submitted = "true";
   });
-});
+
+  // Set form action to your deployed Apps Script Web App URL
+  form.action = "https://script.google.com/macros/s/AKfycbx-DLNrwvrkUdchq2YmibeEwr3LBmWTVpXtpg9Iz1O_o4cyVv9cfEaL40N1AsVegjUhqA/exec"; // <-- replace with Web App URL
+
+  // Populate email dropdown from Contacts sheet
+  async function loadEmails() {
+    try {
+      const response = await fetch(`${form.action}?sheet=Contacts`);
+      const contacts = await response.json();
+      const emailSelect = document.getElementById("email");
+
+      contacts.forEach(c => {
+        if (c.email) {
+          const option = document.createElement("option");
+          option.value = c.email;
+          option.textContent = `${c.name} (${c.email})`;
+          emailSelect.appendChild(option);
+        }
+      });
+    } catch (err) {
+      console.error("Error loading contacts:", err);
+    }
+  }
+
+  loadEmails();
 </script>
+
 </body>
 </html>

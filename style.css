@@ -51,21 +51,22 @@ header h1 {
   box-shadow: 0 20px 30px rgba(0,0,0,0.18);
 }
 
-/* ---------- NAVBAR BUTTONS ---------- */
-.navbar {
-  background: transparent; /* navbar itself can be transparent or match header */
+/* ---------- NAVBAR BUTTONS (exact same as your main buttons) ---------- */
+.navbar-bottom {
+  background: transparent; /* navbar background can be transparent */
   padding: 1rem 0;
+  margin-top: 2rem; /* space from main content */
 }
 
-.navbar .nav-container {
+.navbar-bottom .nav-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
 }
 
-.navbar .nav-button {
-  background: #007bff; /* same as your buttons */
+.navbar-bottom .nav-button {
+  background: #007bff; /* same as your other buttons */
   color: white;
   border: none;
   padding: 0.7rem 1.5rem;
@@ -75,12 +76,12 @@ header h1 {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   text-align: center;
-  text-decoration: none; /* remove underline for <a> */
+  text-decoration: none;
   display: inline-block;
 }
 
-.navbar .nav-button:hover {
-  background: #0056b3;
+.navbar-bottom .nav-button:hover {
+  background: #0056b3; /* hover color matches main buttons */
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
@@ -212,6 +213,7 @@ footer {
   .vehicle-list { flex-direction: column; align-items: center; }
   .card { width: 90%; }
 }
+
 
 
 

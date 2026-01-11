@@ -1,42 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>History</title>
+  <meta charset="UTF-8">
+  <title>Maintenance History</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Maintenance History</h1>
-<div id="results"></div>
+<header>
+  <h1>Maintenance History</h1>
+</header>
+
+<main class="container">
+  <div id="history-list">
+    <!-- Maintenance records will load here -->
+  </div>
+</main>
 
 <script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(location.search).get("vin");
+const vin = new URLSearchParams(window.location.search).get("vin");
 
-loadJSONP(`${API_URL}?sheet=Maintenance`, "historyLoaded")
-.then(records => {
-  const out = document.getElementById("results");
-  const list = records.filter(r => r.vin === vin);
-
-  if (!list.length) {
-    out.textContent = "No records found";
-    return;
-  }
-
-  list.forEach(r => {
-    const d = new Date(r.timestamp);
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `
-      <strong>${d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</strong><br>
-      ${r.service}<br>
-      Parts: ${r.parts}<br>
-      Notes: ${r.notes}
-    `;
-    out.appendChild(c);
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  fetchMaintenance(vin, "history-list");
 });
 </script>
-
 </body>
 </html>

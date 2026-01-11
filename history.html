@@ -25,6 +25,45 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
+// Fetch maintenance records from the Maintenance sheet
+async function fetchMaintenance(vin, containerId) {
+  try {
+    const response = await fetch(`${API_URL}?sheet=Maintenance`);
+    const records = await response.json();
+
+    // Filter records by VIN
+    const vehicleRecords = records
+      .filter(r => (r.vin || r.VIN || "").toString().trim() === vin.trim())
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Most recent first
+
+    const container = document.getElementById(containerId);
+
+    if (!vehicleRecords || vehicleRecords.length === 0) {
+      container.innerHTML = "<p>No maintenance records found.</p>";
+      return;
+    }
+
+    container.innerHTML = vehicleRecords.map(r => {
+      const date = r.timestamp ? new Date(r.timestamp) : null;
+      const dateStr = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A";
+
+      return `
+        <div class="card">
+          <p><strong>Date:</strong> ${dateStr}</p>
+          <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
+          <p><strong>Service:</strong> ${r.service || "N/A"}</p>
+          <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>
+          <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("Error fetching maintenance history:", err);
+    document.getElementById(containerId).innerHTML = "<p>Unable to load maintenance history.</p>";
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   fetchMaintenance(vin, "history-list");
 });

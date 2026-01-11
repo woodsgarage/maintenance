@@ -14,14 +14,14 @@
 <main class="container">
   <!-- Vehicle Info Card -->
   <div id="vehicle-info" class="card">
-    <!-- Vehicle info will be loaded here -->
+    <!-- Vehicle info will load here -->
   </div>
 
   <!-- Action Buttons Card -->
   <div class="card actions">
     <button id="addMaintenanceBtn">Add Maintenance</button>
     <button id="historyBtn">View Maintenance History</button>
-    <button id="dashboardBtn">View Dashboard</button>
+    <button id="scheduleBtn">Schedule Maintenance</button>
   </div>
 </main>
 
@@ -33,6 +33,7 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
+// Load vehicle info from Vehicles sheet
 async function loadVehicle() {
   try {
     const response = await fetch(`${API_URL}?sheet=Vehicles`);
@@ -61,17 +62,21 @@ async function loadVehicle() {
 
 // Button actions
 document.getElementById("addMaintenanceBtn").addEventListener("click", () => {
-  window.location.href = `schedule.html?vin=${vin}`;
+  // Go to maintenance page with VIN parameter
+  window.location.href = `maintenance.html?vin=${vin}`;
 });
 
 document.getElementById("historyBtn").addEventListener("click", () => {
+  // Go to history page with VIN parameter
   window.location.href = `history.html?vin=${vin}`;
 });
 
-document.getElementById("dashboardBtn").addEventListener("click", () => {
-  window.location.href = `index.html`;
+document.getElementById("scheduleBtn").addEventListener("click", () => {
+  // Go to schedule maintenance page with VIN parameter
+  window.location.href = `schedule.html?vin=${vin}`;
 });
 
+// Load the vehicle data on page load
 loadVehicle();
 </script>
 </body>

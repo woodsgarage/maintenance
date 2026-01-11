@@ -1,5 +1,5 @@
 // Base Apps Script URL (no ?sheet parameter)
-const API_URL = "https://script.google.com/macros/s/AKfycbycjeUNgCdUSfuH5Ls4F9HAg5RFb4N6RsppROvT7zbFQqmpyOpobBbH8hnuKLNFaNzoRQ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx-m_cYjeeJ-RP8xOQYhtyJMFlnr5kKw97ibxah-uc_qZ3PaMtuV1jNZQrQxh7hbqDppw/exec"; 
 
 /* -----------------------------
    Fetch Vehicles for Index Page
@@ -155,3 +155,4 @@ async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("vehicle-list")) fetchVehicles();
 });
+

@@ -27,7 +27,7 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage Page
+  &copy; 2026 Woods Garage
 </footer>
 
 <script src="app.js"></script>
@@ -129,6 +129,11 @@
 
   document.getElementById("scheduleBtn").addEventListener("click", () => {
     window.location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+  });
+
+  // ✅ FIX: Home button handler
+  document.getElementById("homeBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
   });
 
   // Load on page load

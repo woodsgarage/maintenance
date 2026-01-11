@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Vehicle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Add Vehicle</h1>
+</header>
+
+<main class="container">
+  <div class="card">
+    <form id="vehicleForm" target="hidden_iframe" method="POST">
+      <input type="hidden" name="type" value="vehicle">
+
+      <label for="name"><strong>Vehicle Name</strong></label>
+      <input id="name" name="name" type="text" placeholder="e.g., Work Truck" required>
+
+      <label for="year"><strong>Year</strong></label>
+      <input id="year" name="year" type="text" inputmode="numeric" placeholder="e.g., 2019">
+
+      <label for="make"><strong>Make</strong></label>
+      <input id="make" name="make" type="text" placeholder="e.g., GMC">
+
+      <label for="model"><strong>Model</strong></label>
+      <input id="model" name="model" type="text" placeholder="e.g., Sierra 3500HD">
+
+      <label for="vin"><strong>VIN</strong></label>
+      <input id="vin" name="vin" type="text" placeholder="17-character VIN" required>
+
+      <div class="actions">
+        <button type="submit" id="saveBtn">Save Vehicle</button>
+        <button type="button" onclick="window.location.href='index.html'">Cancel</button>
+      </div>
+    </form>
+
+    <!-- Hidden iframe to avoid CORS issues -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Woods Garage
+</footer>
+
+<script src="app.js"></script>
+<script>
+  (function () {
+    const form = document.getElementById("vehicleForm");
+    const vinInput = document.getElementById("vin");
+
+    // Ensure API_URL is available from app.js
+    if (typeof API_URL === "undefined" || !API_URL) {
+      alert("API_URL is not defined. Please check app.js.");
+      return;
+    }
+
+    // Set the form action to the Apps Script Web App URL
+    form.action = API_URL;
+
+    form.addEventListener("submit", () => {
+      // Trim VIN before submit (must match sheet lookup behavior)
+      vinInput.value = (vinInput.value || "").toString().trim();
+      if (!vinInput.value) {
+        alert("VIN is required.");
+        event.preventDefault();
+        return;
+      }
+    });
+
+    // After iframe load (post complete), redirect back to index
+    document.getElementById("hidden_iframe").addEventListener("load", () => {
+      // Avoid firing on initial page load (no submit yet)
+      if (!form.dataset.submitted) return;
+      window.location.href = "index.html";
+    });
+
+    // mark submission for iframe load handler
+    form.addEventListener("submit", () => {
+      form.dataset.submitted = "true";
+    });
+  })();
+</script>
+
+</body>
+</html>

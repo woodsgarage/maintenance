@@ -37,47 +37,52 @@
 
 <script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(window.location.search).get("vin");
+  // Get VIN from URL
+  const vin = new URLSearchParams(window.location.search).get("vin");
 
-// Handle Save Maintenance form submission
-document.getElementById("maintenanceForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+  // Handle form submission
+  document.getElementById("maintenanceForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const odometer = document.getElementById("odometer").value;
-  const service = document.getElementById("service").value;
-  const parts = document.getElementById("parts").value;
-  const notes = document.getElementById("notes").value;
-
-  if (!vin) {
-    alert("Vehicle VIN not found. Cannot save maintenance.");
-    return;
-  }
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        vin,
-        odometer,
-        service,
-        parts,
-        notes
-      }),
-    });
-
-    const result = await response.json();
-
-    if (result.status === "success") {
-      alert("Maintenance saved successfully!");
-      document.getElementById("maintenanceForm").reset();
-    } else {
-      alert("Error saving maintenance: " + (result.message || ""));
+    if (!vin) {
+      alert("Vehicle VIN not found. Cannot save maintenance.");
+      return;
     }
-  } catch (err) {
-    console.error("Error saving maintenance:", err);
-    alert("Error saving maintenance. See console for details.");
-  }
-});
+
+    const odometer = document.getElementById("odometer").value.trim();
+    const service = document.getElementById("service").value.trim();
+    const parts = document.getElementById("parts").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sheet: "Maintenance",
+          vin: vin.trim(),
+          odometer,
+          service,
+          parts,
+          notes
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        alert("Maintenance saved successfully!");
+        document.getElementById("maintenanceForm").reset();
+      } else {
+        alert("Error saving maintenance: " + (result.message || ""));
+      }
+    } catch (err) {
+      console.error("Error saving maintenance:", err);
+      alert("Error saving maintenance. Check console for details.");
+    }
+  });
 </script>
 
 </body>

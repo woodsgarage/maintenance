@@ -51,6 +51,15 @@ header h1 {
   box-shadow: 0 20px 30px rgba(0,0,0,0.18);
 }
 
+/* ---------- ACTION BUTTON CARD LAYOUT (SITE-WIDE) ---------- */
+/* Centers buttons within .card.actions and spaces them evenly without changing button styling */
+.card.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
 /* ---------- NAVBAR BUTTONS (exact same as your main buttons) ---------- */
 .navbar-bottom {
   background: transparent; /* navbar background can be transparent */
@@ -85,7 +94,6 @@ header h1 {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
-
 
 /* ---------- VEHICLE LIST ---------- */
 .vehicle-list {
@@ -213,7 +221,3 @@ footer {
   .vehicle-list { flex-direction: column; align-items: center; }
   .card { width: 90%; }
 }
-
-
-
-

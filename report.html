@@ -197,6 +197,19 @@
       font-size: 0.9rem;
     }
 
+    /* NEW: Bottom actions spacing + centering (scoped to this page only) */
+    #bottomActions {
+      margin-top: 1rem;        /* keeps it from touching the paper */
+      margin-left: auto;       /* ensures the card itself centers within report-shell */
+      margin-right: auto;
+      width: 100%;
+      max-width: 900px;        /* matches report-shell max width */
+      display: flex;           /* keeps button layout identical */
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
     /* Print rules */
     @page {
       margin: 0.5in;
@@ -317,7 +330,7 @@
     </div>
 
     <!-- Bottom Actions Card (moved below report preview) -->
-    <div class="card actions report-toolbar">
+    <div class="card actions report-toolbar" id="bottomActions">
       <button id="printBtn">Print / Save as PDF</button>
       <button id="backBtn">Back to History</button>
       <button id="vehicleBtn">Vehicle Dashboard</button>
@@ -328,7 +341,7 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage Maintenance
+  &copy; 2026 Woods Garage
 </footer>
 
 <script src="app.js"></script>

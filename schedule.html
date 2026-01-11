@@ -1,37 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Schedule</title>
+  <meta charset="UTF-8">
+  <title>Schedule Maintenance</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Schedule Maintenance</h1>
+<header>
+  <h1>Schedule Maintenance</h1>
+</header>
 
-<form id="f">
-  <input type="date" id="date" required><br>
-  <input id="service" placeholder="Service"><br>
-  <input type="email" id="email" placeholder="Email Reminder"><br>
-  <button>Schedule</button>
-</form>
+<main class="container">
+  <form id="scheduleForm" class="card">
+    <label for="service">Service</label>
+    <input type="text" id="service" required>
 
+    <label for="dueDate">Due Date</label>
+    <input type="date" id="dueDate" required>
+
+    <label for="email">Reminder Email</label>
+    <select id="email" required>
+      <option value="">Loading contacts…</option>
+    </select>
+
+    <fieldset>
+      <legend>Notification Intervals</legend>
+      <label><input type="checkbox" id="n14" checked> 14 days</label>
+      <label><input type="checkbox" id="n7" checked> 7 days</label>
+      <label><input type="checkbox" id="n3"> 3 days</label>
+      <label><input type="checkbox" id="n1"> 1 day</label>
+    </fieldset>
+
+    <button type="submit">Save Schedule</button>
+  </form>
+</main>
+
+<script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(location.search).get("vin");
+const vin = new URLSearchParams(window.location.search).get("vin");
 
-f.onsubmit = e => {
-  e.preventDefault();
-  fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      type:"future",
-      vin,
-      planned_date:date.value,
-      service:service.value,
-      email:email.value
-    })
-  }).then(() => alert("Scheduled"));
-};
+document.addEventListener("DOMContentLoaded", () => {
+  fetchContacts("email");
+
+  document.getElementById("scheduleForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    await submitSchedule(vin, "service", "dueDate", "email", ["n14","n7","n3","n1"]);
+    window.location.href = `vehicle.html?vin=${vin}`;
+  });
+});
 </script>
-
 </body>
 </html>

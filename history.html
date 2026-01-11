@@ -11,17 +11,22 @@
   <h1>Maintenance History</h1>
 </header>
 
-<nav class="navbar">
-  <div class="container nav-container">
-    <a href="index.html">Home</a>
-  </div>
-</nav>
-  
 <main class="container">
   <div id="history-list">
     <!-- Maintenance records will load here -->
   </div>
 </main>
+
+<!-- Bottom Navbar with button-style links -->
+<nav class="navbar-bottom">
+  <div class="container nav-container">
+    <a href="index.html" class="nav-button">Home</a>
+    <a href="vehicle.html?vin=" class="nav-button" id="vehicleLink">Vehicle Dashboard</a>
+    <a href="maintenance.html?vin=" class="nav-button" id="maintenanceLink">Add Maintenance</a>
+    <a href="history.html?vin=" class="nav-button" id="historyLink">Maintenance History</a>
+    <a href="schedule.html?vin=" class="nav-button" id="scheduleLink">Schedule Maintenance</a>
+  </div>
+</nav>
 
 <footer>
   &copy; 2026 Woods Garage Maintenance
@@ -31,16 +36,15 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
-// Fetch maintenance records from the Maintenance sheet
+// Populate maintenance history
 async function fetchMaintenance(vin, containerId) {
   try {
     const response = await fetch(`${API_URL}?sheet=Maintenance`);
     const records = await response.json();
 
-    // Filter records by VIN
     const vehicleRecords = records
-      .filter(r => (r.vin || r.VIN || "").toString().trim() === vin.trim())
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Most recent first
+      .filter(r => (r.vin || r.VIN || "").toString().trim() === (vin || "").trim())
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     const container = document.getElementById(containerId);
 
@@ -70,8 +74,20 @@ async function fetchMaintenance(vin, containerId) {
   }
 }
 
+// Populate VIN in navbar links
+function updateNavLinks(vin) {
+  document.getElementById("vehicleLink").href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("maintenanceLink").href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("historyLink").href = `history.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("scheduleLink").href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  if (!vin) {
+    alert("Vehicle VIN not found. Maintenance history may not load correctly.");
+  }
   fetchMaintenance(vin, "history-list");
+  updateNavLinks(vin);
 });
 </script>
 </body>

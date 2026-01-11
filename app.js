@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzJQ4RydJakpDXbQz_N0lSuFI8MwvXwZLRyCJ-DwNIBncKVUr3A5_ODsNQXLY2r8lrqHw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbycjeUNgCdUSfuH5Ls4F9HAg5RFb4N6RsppROvT7zbFQqmpyOpobBbH8hnuKLNFaNzoRQ/exec";
 
 function loadJSONP(url, callback) {
   return new Promise(resolve => {
@@ -8,3 +8,4 @@ function loadJSONP(url, callback) {
     document.body.appendChild(s);
   });
 }
+

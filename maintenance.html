@@ -8,25 +8,27 @@
 <body>
 
 <header>
-  <h1>Add Maintenance Record</h1>
+  <h1>Add Maintenance</h1>
 </header>
 
 <main class="container">
-  <form id="maintenanceForm" class="card">
-    <label for="odometer">Odometer</label>
-    <input type="number" id="odometer" required>
+  <div class="card">
+    <form id="maintenanceForm">
+      <label for="odometer">Odometer</label>
+      <input type="number" id="odometer" required>
 
-    <label for="service">Service</label>
-    <input type="text" id="service" required>
+      <label for="service">Service</label>
+      <input type="text" id="service" required>
 
-    <label for="parts">Parts</label>
-    <input type="text" id="parts">
+      <label for="parts">Parts</label>
+      <input type="text" id="parts">
 
-    <label for="notes">Notes</label>
-    <textarea id="notes" rows="3"></textarea>
+      <label for="notes">Notes</label>
+      <textarea id="notes" rows="3"></textarea>
 
-    <button type="submit">Save Maintenance</button>
-  </form>
+      <button type="submit">Save Maintenance</button>
+    </form>
+  </div>
 </main>
 
 <footer>
@@ -37,44 +39,46 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("maintenanceForm");
+// Handle Save Maintenance form submission
+document.getElementById("maintenanceForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const odometer = document.getElementById("odometer").value;
+  const service = document.getElementById("service").value;
+  const parts = document.getElementById("parts").value;
+  const notes = document.getElementById("notes").value;
 
-    const odometer = document.getElementById("odometer").value;
-    const service = document.getElementById("service").value;
-    const parts = document.getElementById("parts").value;
-    const notes = document.getElementById("notes").value;
+  if (!vin) {
+    alert("Vehicle VIN not found. Cannot save maintenance.");
+    return;
+  }
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          vin,
-          odometer,
-          service,
-          parts,
-          notes
-        }),
-      });
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        vin,
+        odometer,
+        service,
+        parts,
+        notes
+      }),
+    });
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (result.status === "success") {
-        alert("Maintenance record saved!");
-        window.location.href = `vehicle.html?vin=${vin}`;
-      } else {
-        alert("Failed to save maintenance record.");
-      }
-
-    } catch (err) {
-      console.error("Error saving maintenance:", err);
-      alert("Error saving maintenance record.");
+    if (result.status === "success") {
+      alert("Maintenance saved successfully!");
+      document.getElementById("maintenanceForm").reset();
+    } else {
+      alert("Error saving maintenance: " + (result.message || ""));
     }
-  });
+  } catch (err) {
+    console.error("Error saving maintenance:", err);
+    alert("Error saving maintenance. See console for details.");
+  }
 });
 </script>
+
 </body>
 </html>

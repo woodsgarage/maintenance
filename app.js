@@ -1,53 +1,130 @@
 // Base Apps Script URL (no ?sheet parameter)
-const API_URL = "https://script.google.com/macros/s/AKfycbzTjSED_JPkOkBpMntLGc1B9nffjc7l-3fklnhMBHqVaMhP4RfIx2chPcK2lFUtDq35uw/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzTjSED_JPkOkBpMntLGc1B9nffjc7l-3fklnhMBHqVaMhP4RfIx2chPcK2lFUtDq35uw/exec";
+
+/* -----------------------------
+   Helpers
+------------------------------ */
+function normalizeVin(v) {
+  return String(v ?? "").trim();
+}
+
+function parseDateSafe(v) {
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function parseOdoSafe(v) {
+  const n = Number(String(v ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+function buildLastOdoMap(maintenanceRows) {
+  // vin -> { odo, dt }
+  const map = new Map();
+  const rows = Array.isArray(maintenanceRows) ? maintenanceRows : [];
+
+  for (const r of rows) {
+    const vin = normalizeVin(r.vin || r.VIN);
+    if (!vin) continue;
+
+    const odo = parseOdoSafe(r.odometer);
+    if (odo === null) continue;
+
+    const dt = parseDateSafe(r.timestamp);
+
+    if (!map.has(vin)) {
+      map.set(vin, { odo, dt });
+      continue;
+    }
+
+    const prev = map.get(vin);
+
+    // Prefer valid timestamp ordering. Fallback: if timestamps not usable, "last seen" wins.
+    if (dt && prev.dt) {
+      if (dt > prev.dt) map.set(vin, { odo, dt });
+    } else if (dt && !prev.dt) {
+      map.set(vin, { odo, dt });
+    } else if (!dt && !prev.dt) {
+      map.set(vin, { odo, dt: null });
+    }
+  }
+
+  return map;
+}
 
 /* -----------------------------
    Fetch Vehicles for Index Page
+   (Now includes Last Mileage from Maintenance)
 ------------------------------ */
 async function fetchVehicles() {
   try {
-    // Explicitly request the Vehicles sheet
-    const response = await fetch(`${API_URL}?sheet=Vehicles`);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    // Pull Vehicles + Maintenance in parallel
+    const [vehiclesResp, maintResp] = await Promise.all([
+      fetch(`${API_URL}?sheet=Vehicles`),
+      fetch(`${API_URL}?sheet=Maintenance`)
+    ]);
 
-    const data = await response.json();
-    console.log("Vehicles API data:", data);
+    if (!vehiclesResp.ok) throw new Error(`Vehicles HTTP error! status: ${vehiclesResp.status}`);
+    if (!maintResp.ok) throw new Error(`Maintenance HTTP error! status: ${maintResp.status}`);
 
-    if (Array.isArray(data) && data.length > 0) {
-      displayVehicles(data);
+    const vehicles = await vehiclesResp.json();
+    const maintenance = await maintResp.json();
+
+    console.log("Vehicles API data:", vehicles);
+    console.log("Maintenance API data:", maintenance);
+
+    if (Array.isArray(vehicles) && vehicles.length > 0) {
+      const lastOdoMap = buildLastOdoMap(maintenance);
+      displayVehicles(vehicles, lastOdoMap);
     } else {
       document.getElementById("vehicle-list").innerHTML =
         "<p>No vehicles found.</p>";
     }
   } catch (error) {
     console.error("Error fetching vehicles:", error);
-    document.getElementById("vehicle-list").innerHTML =
-      "<p>Unable to load vehicles.</p>";
+    const el = document.getElementById("vehicle-list");
+    if (el) el.innerHTML = "<p>Unable to load vehicles.</p>";
   }
 }
 
 /* -----------------------------
    Render vehicle cards
+   (Replaces Start Mileage with Last Mileage)
 ------------------------------ */
-function displayVehicles(vehicles) {
+function displayVehicles(vehicles, lastOdoMap) {
   const container = document.getElementById("vehicle-list");
   if (!container) return;
 
   container.innerHTML = "";
 
   vehicles.forEach(vehicle => {
+    const vin = normalizeVin(vehicle.vin);
+    if (!vin) return;
+
+    const year = String(vehicle.year ?? "").trim();
+    const make = String(vehicle.make ?? "").trim();
+    const model = String(vehicle.model ?? "").trim();
+    const name = String(vehicle.name ?? "").trim();
+
+    const last = lastOdoMap instanceof Map ? lastOdoMap.get(vin) : null;
+    const lastMileageText = last && typeof last.odo === "number"
+      ? last.odo.toLocaleString()
+      : "—";
+
     const card = document.createElement("div");
     card.className = "card vehicle-card";
     card.innerHTML = `
-      <h2>${vehicle.name} (${vehicle.year})</h2>
-      <p><strong>Make:</strong> ${vehicle.make}</p>
-      <p><strong>Model:</strong> ${vehicle.model}</p>
-      <p><strong>VIN:</strong> ${vehicle.vin}</p>
-      <p><strong>Start Mileage:</strong> ${vehicle.start_mileage}</p>
+      <h2>${name}${year ? ` (${year})` : ""}</h2>
+      <p><strong>Make:</strong> ${make || "—"}</p>
+      <p><strong>Model:</strong> ${model || "—"}</p>
+      <p><strong>VIN:</strong> ${vin}</p>
+      <p><strong>Last Mileage:</strong> ${lastMileageText}</p>
     `;
+
     card.addEventListener("click", () => {
-      window.location.href = `vehicle.html?vin=${vehicle.vin}`;
+      window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
     });
+
     container.appendChild(card);
   });
 }
@@ -58,11 +135,17 @@ function displayVehicles(vehicles) {
 async function fetchMaintenance(vin, containerId) {
   try {
     const response = await fetch(`${API_URL}?sheet=Maintenance`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
     const data = await response.json();
 
-    const vehicleRecords = data.filter(r => (r.vin || r.VIN || "").toString().trim() === vin.trim());
+    const vehicleVin = normalizeVin(vin);
+    const vehicleRecords = (Array.isArray(data) ? data : [])
+      .filter(r => normalizeVin(r.vin || r.VIN) === vehicleVin);
 
     const container = document.getElementById(containerId);
+    if (!container) return;
+
     container.innerHTML = "";
 
     if (vehicleRecords.length === 0) {
@@ -84,6 +167,8 @@ async function fetchMaintenance(vin, containerId) {
     });
   } catch (err) {
     console.error("Error loading maintenance:", err);
+    const container = document.getElementById(containerId);
+    if (container) container.innerHTML = "<p>Unable to load maintenance records.</p>";
   }
 }
 
@@ -103,12 +188,16 @@ function formatDate(dateStr) {
 async function fetchContacts(selectId) {
   try {
     const response = await fetch(`${API_URL}?sheet=Contacts`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
     const contacts = await response.json();
 
     const select = document.getElementById(selectId);
+    if (!select) return;
+
     select.innerHTML = `<option value="">Select email</option>`;
 
-    contacts.forEach(c => {
+    (Array.isArray(contacts) ? contacts : []).forEach(c => {
       if (c.email) {
         const option = document.createElement("option");
         option.value = c.email;
@@ -123,6 +212,8 @@ async function fetchContacts(selectId) {
 
 /* -----------------------------
    Submit Scheduled Maintenance
+   NOTE: Kept intact for compatibility with existing site,
+   even though schedule.html uses hidden iframe POST.
 ------------------------------ */
 async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
   const payload = {
@@ -150,11 +241,8 @@ async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
 }
 
 /* -----------------------------
-   Export functions
+   Auto-run index page load
 ------------------------------ */
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("vehicle-list")) fetchVehicles();
 });
-
-
-

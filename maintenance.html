@@ -73,8 +73,8 @@
       const result = await response.json();
 
       if (result.status === "success") {
-        alert("Maintenance saved successfully!");
-        document.getElementById("maintenanceForm").reset();
+        // Redirect to vehicle dashboard with VIN after saving
+        window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
       } else {
         alert("Error saving maintenance: " + (result.message || ""));
       }

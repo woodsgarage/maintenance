@@ -4,6 +4,29 @@
   <meta charset="UTF-8">
   <title>Add Maintenance</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Local layout improvements (works with your existing style.css) */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    @media (min-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Make the primary submit button span the form width nicely */
+    .form-actions {
+      grid-column: 1 / -1;
+    }
+    .form-actions button {
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
 
@@ -14,66 +37,136 @@
 <main class="container">
   <div class="card">
     <form id="maintenanceForm" method="POST" target="hidden_iframe">
-      <!-- Hidden input for type -->
+      <!-- Hidden fields -->
       <input type="hidden" name="type" value="maintenance">
-      <!-- VIN will be populated by JS -->
       <input type="hidden" name="vin" id="vinField">
 
-      <label for="odometer">Odometer</label>
-      <input type="number" name="odometer" id="odometer" required>
+      <div class="form-grid">
+        <!-- Odometer -->
+        <div>
+          <label for="odometer">Odometer</label>
+          <input
+            type="number"
+            name="odometer"
+            id="odometer"
+            required
+            min="0"
+            step="1"
+            placeholder="e.g., 125430"
+            inputmode="numeric"
+          >
+        </div>
 
-      <label for="service">Service</label>
-      <input type="text" name="service" id="service" required>
+        <!-- Service -->
+        <div>
+          <label for="service">Service</label>
+          <input
+            type="text"
+            name="service"
+            id="service"
+            required
+            maxlength="120"
+            placeholder="e.g., Oil change, Tire rotation"
+            autocomplete="off"
+          >
+        </div>
 
-      <label for="parts">Parts</label>
-      <input type="text" name="parts" id="parts">
+        <!-- Parts -->
+        <div class="full">
+          <label for="parts">Parts</label>
+          <input
+            type="text"
+            name="parts"
+            id="parts"
+            maxlength="200"
+            placeholder="e.g., PF63 oil filter, 5W-40 CK-4"
+            autocomplete="off"
+          >
+        </div>
 
-      <label for="notes">Notes</label>
-      <textarea name="notes" id="notes" rows="3"></textarea>
+        <!-- Notes -->
+        <div class="full">
+          <label for="notes">Notes</label>
+          <textarea
+            name="notes"
+            id="notes"
+            rows="4"
+            maxlength="1000"
+            placeholder="Any extra details: torque specs, observations, next steps..."
+          ></textarea>
+        </div>
 
-      <button type="submit">Save Maintenance</button>
+        <!-- Submit -->
+        <div class="form-actions">
+          <button type="submit" id="saveBtn">Save Maintenance</button>
+        </div>
+      </div>
     </form>
+  </div>
+
+  <!-- Bottom Action Buttons Card (same style as vehicle.html) -->
+  <div class="card actions">
+    <button id="homeBtn">Home</button>
+    <button id="vehicleBtn">Vehicle Dashboard</button>
+    <button id="historyBtn">Maintenance History</button>
+    <button id="scheduleBtn">Schedule Maintenance</button>
   </div>
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage
+  &copy; 2026 Woods Garage Maintenance
 </footer>
 
-<!-- Hidden iframe for form submission -->
+<!-- Hidden iframe for CORS-safe form submission -->
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-  // Grab VIN from URL
   const vin = new URLSearchParams(window.location.search).get("vin");
+  const form = document.getElementById("maintenanceForm");
+  const iframe = document.getElementsByName("hidden_iframe")[0];
+  const saveBtn = document.getElementById("saveBtn");
+
+  // Set VIN hidden field
   if (!vin) {
     alert("Vehicle VIN not found. Cannot save maintenance.");
   } else {
     document.getElementById("vinField").value = vin;
   }
 
-  // Redirect after form submission
-  const form = document.getElementById("maintenanceForm");
-  const iframe = document.getElementsByName("hidden_iframe")[0];
+  // IMPORTANT: Use your deployed Apps Script Web App URL
+  form.action = "https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec";
 
-  iframe.onload = function() {
-    // Only redirect if the form was actually submitted
+  // Disable button on submit for better UX
+  form.addEventListener("submit", function (event) {
+    if (!vin) {
+      event.preventDefault();
+      return;
+    }
+    form.dataset.submitted = "true";
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+  });
+
+  // Redirect after successful submission
+  iframe.onload = function () {
     if (form.dataset.submitted === "true") {
       window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
     }
   };
 
-  form.addEventListener("submit", function() {
-    if (!vin) {
-      // Prevent submission if no VIN
-      event.preventDefault();
-      return;
-    }
-    form.dataset.submitted = "true";
+  // Bottom nav button actions
+  document.getElementById("homeBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
   });
-
-  // Set the form action to your deployed Apps Script Web App URL
-  form.action = "https://script.google.com/macros/s/AKfycbzTjSED_JPkOkBpMntLGc1B9nffjc7l-3fklnhMBHqVaMhP4RfIx2chPcK2lFUtDq35uw/exec"; // <-- replace with your Web App URL
+  document.getElementById("vehicleBtn").addEventListener("click", () => {
+    window.location.href = `vehicle.html?vin=${encodeURIComponent(vin || "")}`;
+  });
+  document.getElementById("historyBtn").addEventListener("click", () => {
+    window.location.href = `history.html?vin=${encodeURIComponent(vin || "")}`;
+  });
+  document.getElementById("scheduleBtn").addEventListener("click", () => {
+    window.location.href = `schedule.html?vin=${encodeURIComponent(vin || "")}`;
+  });
 </script>
 
 </body>

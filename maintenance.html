@@ -4,14 +4,25 @@
   <meta charset="UTF-8">
   <title>Add Maintenance</title>
   <link rel="stylesheet" href="style.css">
+
   <style>
-    /* Local layout improvements (works with your existing style.css) */
+    /* ---------- FIX FORM OVERFLOW ---------- */
+    #maintenanceForm *,
+    #maintenanceForm *::before,
+    #maintenanceForm *::after {
+      box-sizing: border-box;
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 1rem;
+      width: 100%;
     }
-    .form-grid .full { grid-column: 1 / -1; }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
 
     @media (min-width: 700px) {
       .form-grid {
@@ -19,10 +30,10 @@
       }
     }
 
-    /* Make the primary submit button span the form width nicely */
     .form-actions {
       grid-column: 1 / -1;
     }
+
     .form-actions button {
       width: 100%;
     }
@@ -37,12 +48,10 @@
 <main class="container">
   <div class="card">
     <form id="maintenanceForm" method="POST" target="hidden_iframe">
-      <!-- Hidden fields -->
       <input type="hidden" name="type" value="maintenance">
       <input type="hidden" name="vin" id="vinField">
 
       <div class="form-grid">
-        <!-- Odometer -->
         <div>
           <label for="odometer">Odometer</label>
           <input
@@ -52,12 +61,10 @@
             required
             min="0"
             step="1"
-            placeholder="e.g., 125430"
-            inputmode="numeric"
+            placeholder="e.g. 125430"
           >
         </div>
 
-        <!-- Service -->
         <div>
           <label for="service">Service</label>
           <input
@@ -65,38 +72,30 @@
             name="service"
             id="service"
             required
-            maxlength="120"
-            placeholder="e.g., Oil change, Tire rotation"
-            autocomplete="off"
+            placeholder="Oil change, tire rotation"
           >
         </div>
 
-        <!-- Parts -->
         <div class="full">
           <label for="parts">Parts</label>
           <input
             type="text"
             name="parts"
             id="parts"
-            maxlength="200"
-            placeholder="e.g., PF63 oil filter, 5W-40 CK-4"
-            autocomplete="off"
+            placeholder="Filter, oil type, etc."
           >
         </div>
 
-        <!-- Notes -->
         <div class="full">
           <label for="notes">Notes</label>
           <textarea
             name="notes"
             id="notes"
             rows="4"
-            maxlength="1000"
-            placeholder="Any extra details: torque specs, observations, next steps..."
+            placeholder="Torque specs, observations, next service..."
           ></textarea>
         </div>
 
-        <!-- Submit -->
         <div class="form-actions">
           <button type="submit" id="saveBtn">Save Maintenance</button>
         </div>
@@ -104,7 +103,7 @@
     </form>
   </div>
 
-  <!-- Bottom Action Buttons Card (same style as vehicle.html) -->
+  <!-- Bottom actions -->
   <div class="card actions">
     <button id="homeBtn">Home</button>
     <button id="vehicleBtn">Vehicle Dashboard</button>
@@ -114,10 +113,9 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage Maintenance
+  &copy; 2026 Woods Garage
 </footer>
 
-<!-- Hidden iframe for CORS-safe form submission -->
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
@@ -126,47 +124,30 @@
   const iframe = document.getElementsByName("hidden_iframe")[0];
   const saveBtn = document.getElementById("saveBtn");
 
-  // Set VIN hidden field
   if (!vin) {
-    alert("Vehicle VIN not found. Cannot save maintenance.");
+    alert("Vehicle VIN not found.");
   } else {
     document.getElementById("vinField").value = vin;
   }
 
-  // IMPORTANT: Use your deployed Apps Script Web App URL
   form.action = "https://script.google.com/macros/s/YOUR_WEB_APP_ID/exec";
 
-  // Disable button on submit for better UX
-  form.addEventListener("submit", function (event) {
-    if (!vin) {
-      event.preventDefault();
-      return;
-    }
+  form.addEventListener("submit", () => {
     form.dataset.submitted = "true";
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
   });
 
-  // Redirect after successful submission
-  iframe.onload = function () {
+  iframe.onload = () => {
     if (form.dataset.submitted === "true") {
       window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
     }
   };
 
-  // Bottom nav button actions
-  document.getElementById("homeBtn").addEventListener("click", () => {
-    window.location.href = "index.html";
-  });
-  document.getElementById("vehicleBtn").addEventListener("click", () => {
-    window.location.href = `vehicle.html?vin=${encodeURIComponent(vin || "")}`;
-  });
-  document.getElementById("historyBtn").addEventListener("click", () => {
-    window.location.href = `history.html?vin=${encodeURIComponent(vin || "")}`;
-  });
-  document.getElementById("scheduleBtn").addEventListener("click", () => {
-    window.location.href = `schedule.html?vin=${encodeURIComponent(vin || "")}`;
-  });
+  document.getElementById("homeBtn").onclick = () => location.href = "index.html";
+  document.getElementById("vehicleBtn").onclick = () => location.href = `vehicle.html?vin=${vin}`;
+  document.getElementById("historyBtn").onclick = () => location.href = `history.html?vin=${vin}`;
+  document.getElementById("scheduleBtn").onclick = () => location.href = `schedule.html?vin=${vin}`;
 </script>
 
 </body>

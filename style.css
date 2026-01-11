@@ -51,6 +51,34 @@ header h1 {
   box-shadow: 0 20px 30px rgba(0,0,0,0.18);
 }
 
+/* ---------- NAVBAR ---------- */
+.navbar {
+  background: #007bff; /* same blue as header */
+  padding: 0.8rem 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.navbar .nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.navbar a:hover {
+  background: #0056b3;
+}
+
+
 /* ---------- VEHICLE LIST ---------- */
 .vehicle-list {
   display: flex;
@@ -177,3 +205,4 @@ footer {
   .vehicle-list { flex-direction: column; align-items: center; }
   .card { width: 90%; }
 }
+

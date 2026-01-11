@@ -1,32 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Vehicle Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1 id="title">Vehicle</h1>
+<header>
+  <h1>Vehicle Dashboard</h1>
+</header>
 
-<button onclick="go('history.html')">Maintenance History</button>
-<button onclick="go('maintenance.html')">Add Maintenance</button>
-<button onclick="go('schedule.html')">Schedule Maintenance</button>
+<main class="container">
+  <div id="vehicle-info" class="card">
+    <!-- Selected vehicle info will appear here -->
+  </div>
+
+  <div class="actions card">
+    <button id="historyBtn">View Maintenance History</button>
+    <button id="scheduleBtn">Schedule Maintenance</button>
+  </div>
+</main>
 
 <script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(location.search).get("vin");
+const vin = new URLSearchParams(window.location.search).get("vin");
 
-function go(p) {
-  location.href = `${p}?vin=${encodeURIComponent(vin)}`;
+async function loadVehicle() {
+  try {
+    const response = await fetch(`${API_URL}?sheet=Vehicles`);
+    const vehicles = await response.json();
+
+    const v = vehicles.find(v => (v.vin || v.VIN || "").toString().trim() === vin.trim());
+    const container = document.getElementById("vehicle-info");
+
+    if (!v) {
+      container.innerHTML = "<p>Vehicle not found.</p>";
+      return;
+    }
+
+    container.innerHTML = `
+      <h2>${v.name} (${v.year})</h2>
+      <p><strong>Make:</strong> ${v.make}</p>
+      <p><strong>Model:</strong> ${v.model}</p>
+      <p><strong>VIN:</strong> ${v.vin}</p>
+      <p><strong>Start Mileage:</strong> ${v.start_mileage}</p>
+    `;
+  } catch (err) {
+    console.error("Error loading vehicle dashboard:", err);
+    document.getElementById("vehicle-info").innerHTML = "<p>Unable to load vehicle info.</p>";
+  }
 }
 
-loadJSONP(`${API_URL}?sheet=Vehicles`, "vehicleLoaded")
-.then(list => {
-  const v = list.find(x => x.vin === vin);
-  document.getElementById("title").textContent =
-    `${v.year} ${v.make} ${v.model}`;
+document.getElementById("historyBtn").addEventListener("click", () => {
+  window.location.href = `history.html?vin=${vin}`;
 });
-</script>
 
+document.getElementById("scheduleBtn").addEventListener("click", () => {
+  window.location.href = `schedule.html?vin=${vin}`;
+});
+
+loadVehicle();
+</script>
 </body>
 </html>

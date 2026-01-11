@@ -21,11 +21,11 @@
       <label for="service">Service</label>
       <input type="text" name="service" id="service" required>
 
-      <label for="due_date">Planned Date</label>
+      <label for="planned_date">Planned Date</label>
       <input type="date" name="planned_date" id="planned_date" required>
 
-      <label for="email">Assign Email</label>
-      <select name="email" id="email" required>
+      <label for="assignedEmail">Assign Email</label>
+      <select name="assignedEmail" id="email" required>
         <option value="">Select Email</option>
       </select>
 
@@ -34,30 +34,31 @@
 
       <fieldset>
         <legend>Notification Intervals (days before)</legend>
-        <label><input type="checkbox" name="notify_1" value="yes">1 day</label>
-        <label><input type="checkbox" name="notify_3" value="yes">3 days</label>
-        <label><input type="checkbox" name="notify_7" value="yes">7 days</label>        
-        <label><input type="checkbox" name="notify_14" value="yes">14 days</label>          
+        <label><input type="checkbox" name="notified_1" value="Yes">1 day</label>
+        <label><input type="checkbox" name="notified_3" value="Yes">3 days</label>
+        <label><input type="checkbox" name="notified_7" value="Yes">7 days</label>        
+        <label><input type="checkbox" name="notified_14" value="Yes">14 days</label>          
       </fieldset>
 
       <button type="submit">Save Schedule</button>
     </form>
   </div>
 
-  <!-- Bottom Navbar with button-style links -->
+  <!-- Bottom Navbar with button-style link -->
   <div class="card actions">
     <button id="homeBtn">Home</button>
   </div>
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage
+  &copy; 2026 Woods Garage Page
 </footer>
 
 <!-- Hidden iframe for form submission -->
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
+  // Get VIN from URL
   const vin = new URLSearchParams(window.location.search).get("vin");
   if (!vin) {
     alert("Vehicle VIN not found. Cannot schedule maintenance.");
@@ -68,7 +69,7 @@
   const form = document.getElementById("scheduleForm");
   const iframe = document.getElementsByName("hidden_iframe")[0];
 
-  // Redirect after submission
+  // Redirect back to vehicle page after submission
   iframe.onload = function() {
     if (form.dataset.submitted === "true") {
       window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
@@ -83,10 +84,10 @@
     form.dataset.submitted = "true";
   });
 
-  // Set form action to your deployed Apps Script Web App URL
-  form.action = "https://script.google.com/macros/s/AKfycbx-DLNrwvrkUdchq2YmibeEwr3LBmWTVpXtpg9Iz1O_o4cyVv9cfEaL40N1AsVegjUhqA/exec"; // <-- replace with your Web App URL
+  // Replace with your deployed Apps Script Web App URL
+  form.action = "https://script.google.com/macros/s/AKfycbx-DLNrwvrkUdchq2YmibeEwr3LBmWTVpXtpg9Iz1O_o4cyVv9cfEaL40N1AsVegjUhqA/exec";
 
-  // Populate email dropdown from Contacts sheet
+  // Load Contacts sheet for assignedEmail dropdown
   async function loadEmails() {
     try {
       const response = await fetch(`${form.action}?sheet=Contacts`);
@@ -96,7 +97,7 @@
       contacts.forEach(c => {
         if (c.email) {
           const option = document.createElement("option");
-          option.value = c.email;
+          option.value = c.email;       // Stored in FutureMaintenance.assignedEmail
           option.textContent = `${c.name} (${c.email})`;
           emailSelect.appendChild(option);
         }
@@ -108,11 +109,10 @@
 
   loadEmails();
 
-  // Bottom navbar button navigation
-  document.getElementById("homeBtn").addEventListener("click", () => window.location.href = "index.html");
-  document.getElementById("vehicleBtn").addEventListener("click", () => window.location.href = `vehicle.html?vin=${vin}`);
-  document.getElementById("historyBtn").addEventListener("click", () => window.location.href = `history.html?vin=${vin}`);
-  document.getElementById("addMaintenanceBtn").addEventListener("click", () => window.location.href = `maintenance.html?vin=${vin}`);
+  // Bottom nav button
+  document.getElementById("homeBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
 </script>
 
 </body>

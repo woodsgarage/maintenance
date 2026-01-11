@@ -12,13 +12,16 @@
 </header>
 
 <main class="container">
+  <!-- Vehicle Info Card -->
   <div id="vehicle-info" class="card">
-    <!-- Vehicle info loaded here -->
+    <!-- Vehicle info will be loaded here -->
   </div>
 
+  <!-- Action Buttons Card -->
   <div class="card actions">
+    <button id="addMaintenanceBtn">Add Maintenance</button>
     <button id="historyBtn">View Maintenance History</button>
-    <button id="scheduleBtn">Schedule Maintenance</button>
+    <button id="dashboardBtn">View Dashboard</button>
   </div>
 </main>
 
@@ -56,12 +59,17 @@ async function loadVehicle() {
   }
 }
 
+// Button actions
+document.getElementById("addMaintenanceBtn").addEventListener("click", () => {
+  window.location.href = `schedule.html?vin=${vin}`;
+});
+
 document.getElementById("historyBtn").addEventListener("click", () => {
   window.location.href = `history.html?vin=${vin}`;
 });
 
-document.getElementById("scheduleBtn").addEventListener("click", () => {
-  window.location.href = `schedule.html?vin=${vin}`;
+document.getElementById("dashboardBtn").addEventListener("click", () => {
+  window.location.href = `index.html`;
 });
 
 loadVehicle();

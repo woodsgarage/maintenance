@@ -141,7 +141,7 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage Maintenance
+  &copy; 2026 Woods Garage
 </footer>
 
 <iframe name="hidden_iframe" style="display:none;"></iframe>
@@ -181,44 +181,67 @@
     return Number.isFinite(n) ? n : null;
   }
 
-  async function prefillLastOdometer(increment) {
+  async function getLastMaintenanceForVin() {
+    if (!vin) return null;
+
+    const resp = await fetch(`${form.action}?sheet=Maintenance`);
+    const records = await resp.json();
+
+    const matches = (Array.isArray(records) ? records : [])
+      .filter(r => String(r.vin ?? "").trim() === String(vin).trim());
+
+    if (!matches.length) return null;
+
+    let latest = null;
+    for (const r of matches) {
+      const dt = parseDateSafe(r.timestamp);
+      if (!dt) continue;
+      if (!latest || dt > latest.dt) latest = { r, dt };
+    }
+
+    return latest ? latest.r : matches[matches.length - 1];
+  }
+
+  async function prefillLastOdometer(mode) {
+    // mode: "suggest" | "exact"
     if (!vin) return;
 
     try {
-      const resp = await fetch(`${form.action}?sheet=Maintenance`);
-      const records = await resp.json();
+      const lastRecord = await getLastMaintenanceForVin();
 
-      const matches = (Array.isArray(records) ? records : [])
-        .filter(r => String(r.vin ?? "").trim() === String(vin).trim());
-
-      if (!matches.length) {
+      if (!lastRecord) {
         odometerHint.textContent = "No prior maintenance records found.";
+        odometerInput.min = "0";
         return;
       }
 
-      let latest = null;
-      for (const r of matches) {
-        const dt = parseDateSafe(r.timestamp);
-        if (!dt) continue;
-        if (!latest || dt > latest.dt) latest = { r, dt };
+      const lastOdo = parseOdoSafe(lastRecord.odometer);
+      if (lastOdo === null) {
+        odometerHint.textContent = "Could not read previous odometer.";
+        odometerInput.min = "0";
+        return;
       }
 
-      const record = latest ? latest.r : matches[matches.length - 1];
-      const lastOdo = parseOdoSafe(record.odometer);
-      if (lastOdo === null) return;
+      if (mode === "suggest") {
+        const suggested = lastOdo + 100;
 
-      const value = increment ? lastOdo + 100 : lastOdo;
+        // Prefill suggested, but DO NOT require it.
+        // Validation on submit enforces last + 1 minimum.
+        odometerInput.value = suggested;
+        odometerInput.min = "0";
 
-      odometerInput.value = value;
-      odometerInput.min = value;
-
-      odometerHint.textContent = increment
-        ? `Last: ${lastOdo.toLocaleString()} → suggested: ${value.toLocaleString()}`
-        : `Last recorded odometer: ${value.toLocaleString()}`;
-
+        odometerHint.textContent =
+          `Last: ${lastOdo.toLocaleString()} → suggested: ${suggested.toLocaleString()} (editable)`;
+      } else {
+        // On Save & Add Another: prefill exact last odometer (no increment)
+        odometerInput.value = lastOdo;
+        odometerInput.min = "0";
+        odometerHint.textContent = `Last recorded odometer: ${lastOdo.toLocaleString()}`;
+      }
     } catch (err) {
       console.error("Prefill odometer failed:", err);
       odometerHint.textContent = "Could not load previous odometer.";
+      odometerInput.min = "0";
     }
   }
 
@@ -232,9 +255,57 @@
     saveAnotherBtn.textContent = isSubmitting ? "Saving..." : "Save & Add Another";
   }
 
-  form.addEventListener("submit", () => {
-    form.dataset.submitted = "true";
+  // ✅ Keep styling/layout unchanged; only change behavior:
+  // - Allow editing away from suggested +100
+  // - Enforce odometer >= last + 1 at save time
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // validate first, then submit
+
+    form.dataset.submitted = "false";
+
+    if (!vin) {
+      alert("Vehicle VIN not found. Cannot save maintenance.");
+      return;
+    }
+
+    const currentOdo = parseOdoSafe(odometerInput.value);
+    if (currentOdo === null) {
+      alert("Please enter a valid odometer value.");
+      odometerInput.focus();
+      return;
+    }
+
     setSubmitting(true);
+
+    try {
+      const lastRecord = await getLastMaintenanceForVin();
+
+      if (lastRecord) {
+        const lastOdo = parseOdoSafe(lastRecord.odometer);
+
+        if (lastOdo !== null) {
+          const requiredMin = lastOdo + 1;
+
+          if (currentOdo < requiredMin) {
+            setSubmitting(false);
+            alert(
+              `Odometer must be at least ${requiredMin.toLocaleString()} ` +
+              `(last recorded was ${lastOdo.toLocaleString()}).`
+            );
+            odometerInput.focus();
+            return;
+          }
+        }
+      }
+
+      // Submit to hidden iframe after validation
+      form.dataset.submitted = "true";
+      form.submit();
+    } catch (err) {
+      console.error("Odometer validation failed:", err);
+      setSubmitting(false);
+      alert("Could not validate odometer against the last record. Please try again.");
+    }
   });
 
   iframe.onload = async () => {
@@ -254,8 +325,8 @@
     notesInput.value = "";
     serviceInput.focus();
 
-    // 🔁 Re-fetch Maintenance and prefill LAST odometer (no increment)
-    await prefillLastOdometer(false);
+    // 🔁 Re-fetch Maintenance and prefill LAST odometer exactly (no increment)
+    await prefillLastOdometer("exact");
   };
 
   document.getElementById("homeBtn").onclick = () => location.href = "index.html";
@@ -263,8 +334,8 @@
   document.getElementById("historyBtn").onclick = () => location.href = `history.html?vin=${vin}`;
   document.getElementById("scheduleBtn").onclick = () => location.href = `schedule.html?vin=${vin}`;
 
-  // Initial load: prefill with +100
-  document.addEventListener("DOMContentLoaded", () => prefillLastOdometer(true));
+  // Initial load: show suggested +100 but allow editing.
+  document.addEventListener("DOMContentLoaded", () => prefillLastOdometer("suggest"));
 </script>
 
 </body>

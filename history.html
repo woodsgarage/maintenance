@@ -32,13 +32,13 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
-// Populate maintenance history
+// Populate maintenance history (with Edit support)
 async function fetchMaintenance(vin, containerId) {
   try {
     const response = await fetch(`${API_URL}?sheet=Maintenance`);
     const records = await response.json();
 
-    const vehicleRecords = records
+    const vehicleRecords = (Array.isArray(records) ? records : [])
       .filter(r => (r.vin || r.VIN || "").toString().trim() === (vin || "").trim())
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -53,6 +53,10 @@ async function fetchMaintenance(vin, containerId) {
       const date = r.timestamp ? new Date(r.timestamp) : null;
       const dateStr = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A";
 
+      // NEW: record_id (added to Maintenance sheet as last column)
+      const recordId = (r.record_id || "").toString().trim();
+      const canEdit = Boolean(recordId);
+
       return `
         <div class="card">
           <p><strong>Date:</strong> ${dateStr}</p>
@@ -60,6 +64,18 @@ async function fetchMaintenance(vin, containerId) {
           <p><strong>Service:</strong> ${r.service || "N/A"}</p>
           <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>
           <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+
+          ${canEdit ? `
+            <div class="actions">
+              <button type="button" onclick="editRecord('${encodeURIComponent(vin || '')}','${encodeURIComponent(recordId)}')">
+                Edit
+              </button>
+            </div>
+          ` : `
+            <p style="font-size:0.9rem;color:#666;margin-top:1rem;">
+              Edit unavailable for this record (missing record_id).
+            </p>
+          `}
         </div>
       `;
     }).join("");
@@ -70,12 +86,23 @@ async function fetchMaintenance(vin, containerId) {
   }
 }
 
-// Populate VIN in navbar links
+// NEW: Navigate to edit page
+function editRecord(vinEncoded, idEncoded) {
+  // vinEncoded and idEncoded are already encodeURIComponent()'d
+  window.location.href = `edit-maintenance.html?vin=${vinEncoded}&id=${idEncoded}`;
+}
+
+// Populate VIN in navbar links (kept intact; only runs if those ids exist)
 function updateNavLinks(vin) {
-  document.getElementById("vehicleLink").href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("maintenanceLink").href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("historyLink").href = `history.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("scheduleLink").href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+  const vehicleLink = document.getElementById("vehicleLink");
+  const maintenanceLink = document.getElementById("maintenanceLink");
+  const historyLink = document.getElementById("historyLink");
+  const scheduleLink = document.getElementById("scheduleLink");
+
+  if (vehicleLink) vehicleLink.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  if (maintenanceLink) maintenanceLink.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+  if (historyLink) historyLink.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  if (scheduleLink) scheduleLink.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {

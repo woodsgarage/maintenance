@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maintenance Report</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Professional report styling is kept scoped to this page only */
+
+    :root {
+      --ink: #111;
+      --muted: #555;
+      --line: #ddd;
+      --paper: #fff;
+    }
+
+    /* Screen layout */
+    .report-shell {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .report-toolbar {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    /* Report paper */
+    .paper {
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 1.25rem;
+      width: 100%;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    /* Header */
+    .shop-header {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    @media (min-width: 700px) {
+      .shop-header { grid-template-columns: 1fr 1fr; }
+    }
+
+    .shop-brand h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: var(--ink);
+      letter-spacing: 0.5px;
+    }
+
+    .shop-brand p,
+    .shop-meta p {
+      margin: 0.15rem 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .shop-meta {
+      text-align: left;
+    }
+    @media (min-width: 700px) {
+      .shop-meta { text-align: right; }
+    }
+
+    /* Vehicle info block */
+    .block {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.9rem;
+    }
+
+    .block-title {
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.35rem 1rem;
+    }
+    @media (min-width: 700px) {
+      .kv-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.5rem;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .k {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+    .v {
+      color: var(--ink);
+      font-size: 0.98rem;
+      overflow-wrap: anywhere;
+    }
+
+    /* Summary */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem 1rem;
+    }
+    @media (min-width: 700px) {
+      .summary-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.75rem;
+    }
+    .summary-card .label {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 0.25rem;
+    }
+    .summary-card .value {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    /* Table */
+    .table-wrap {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.65rem 0.65rem;
+      background: #f3f5f8;
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+    }
+
+    tbody td {
+      padding: 0.65rem 0.65rem;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+      color: var(--ink);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .nowrap { white-space: nowrap; }
+
+    /* Footer */
+    .report-footer {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Print rules */
+    @page {
+      margin: 0.5in;
+    }
+
+    @media print {
+      header, footer, nav, .navbar-bottom, .report-toolbar, .card.actions {
+        display: none !important;
+      }
+
+      body {
+        background: #fff !important;
+      }
+
+      .container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        align-items: stretch !important;
+      }
+
+      .paper {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+      }
+
+      .table-wrap {
+        border-radius: 0 !important;
+      }
+
+      /* Avoid row splitting */
+      tr, td, th {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Maintenance Report</h1>
+</header>
+
+<main class="container">
+  <div class="report-shell">
+
+    <div class="card actions report-toolbar">
+      <button id="printBtn">Print / Save as PDF</button>
+      <button id="backBtn">Back to History</button>
+      <button id="vehicleBtn">Vehicle Dashboard</button>
+      <button id="homeBtn">Home</button>
+    </div>
+
+    <div class="paper" id="paper">
+      <!-- Shop Header -->
+      <section class="shop-header">
+        <div class="shop-brand">
+          <h2>Woods Garage</h2>
+          <p>Service & Maintenance Report</p>
+          <p class="muted">service.woodsgarage.net</p>
+        </div>
+        <div class="shop-meta">
+          <p><strong>Report #:</strong> <span id="reportNo">—</span></p>
+          <p><strong>Generated:</strong> <span id="generatedOn">—</span></p>
+          <p><strong>VIN:</strong> <span id="vinDisplay">—</span></p>
+        </div>
+      </section>
+
+      <!-- Vehicle Info -->
+      <section class="block">
+        <p class="block-title">Vehicle Information</p>
+        <div class="kv-grid">
+          <div class="kv"><div class="k">Vehicle</div><div class="v" id="vehicleName">—</div></div>
+          <div class="kv"><div class="k">Year</div><div class="v" id="vehicleYear">—</div></div>
+          <div class="kv"><div class="k">Make</div><div class="v" id="vehicleMake">—</div></div>
+          <div class="kv"><div class="k">Model</div><div class="v" id="vehicleModel">—</div></div>
+        </div>
+      </section>
+
+      <!-- Summary -->
+      <section class="block">
+        <p class="block-title">Summary</p>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="label">Total Records</div>
+            <div class="value" id="totalRecords">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Last Mileage</div>
+            <div class="value" id="lastMileage">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Date Range</div>
+            <div class="value" id="dateRange">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Table -->
+      <section class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Date</th>
+              <th class="nowrap">Odometer</th>
+              <th>Service</th>
+              <th>Parts</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr>
+              <td colspan="5" class="muted">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Footer note -->
+      <section class="report-footer">
+        <div><strong>Disclaimer:</strong> This report is generated from recorded maintenance entries and may contain customer-supplied notes.</div>
+        <div class="muted">© 2026 Woods Garage </div>
+      </section>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Woods Garage Maintenance
+</footer>
+
+<script src="app.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const vin = params.get("vin");
+
+  function normalizeVin(v) {
+    return String(v ?? "").trim();
+  }
+
+  function parseDateSafe(v) {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDateShort(v) {
+    const d = parseDateSafe(v);
+    if (!d) return "N/A";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function parseOdoSafe(v) {
+    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function fmtNum(n) {
+    return (n === null || n === undefined) ? "—" : Number(n).toLocaleString();
+  }
+
+  function makeReportNo(vin) {
+    // simple deterministic-ish report number for display
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const tail = (vin || "").slice(-6).toUpperCase();
+    return `WG-${y}${m}${d}-${tail || "REPORT"}`;
+  }
+
+  async function loadReport() {
+    if (!vin) {
+      alert("VIN not found. Cannot generate report.");
+      document.getElementById("rows").innerHTML =
+        `<tr><td colspan="5" class="muted">VIN missing.</td></tr>`;
+      return;
+    }
+
+    // header fields
+    document.getElementById("vinDisplay").textContent = vin;
+    document.getElementById("generatedOn").textContent = new Date().toLocaleString();
+    document.getElementById("reportNo").textContent = makeReportNo(vin);
+
+    try {
+      const [vehResp, maintResp] = await Promise.all([
+        fetch(`${API_URL}?sheet=Vehicles`),
+        fetch(`${API_URL}?sheet=Maintenance`)
+      ]);
+
+      const vehicles = await vehResp.json();
+      const maintenance = await maintResp.json();
+
+      const v = (Array.isArray(vehicles) ? vehicles : []).find(r =>
+        normalizeVin(r.vin || r.VIN) === normalizeVin(vin)
+      );
+
+      if (v) {
+        document.getElementById("vehicleName").textContent = v.name || "—";
+        document.getElementById("vehicleYear").textContent = v.year || "—";
+        document.getElementById("vehicleMake").textContent = v.make || "—";
+        document.getElementById("vehicleModel").textContent = v.model || "—";
+      } else {
+        document.getElementById("vehicleName").textContent = "—";
+        document.getElementById("vehicleYear").textContent = "—";
+        document.getElementById("vehicleMake").textContent = "—";
+        document.getElementById("vehicleModel").textContent = "—";
+      }
+
+      const rows = (Array.isArray(maintenance) ? maintenance : [])
+        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
+
+      if (!rows.length) {
+        document.getElementById("totalRecords").textContent = "0";
+        document.getElementById("lastMileage").textContent = "—";
+        document.getElementById("dateRange").textContent = "—";
+        document.getElementById("rows").innerHTML =
+          `<tr><td colspan="5" class="muted">No maintenance records found for this VIN.</td></tr>`;
+        return;
+      }
+
+      // sort newest first for table display
+      rows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // summary: last mileage is newest record odometer (if parseable)
+      const lastOdo = parseOdoSafe(rows[0].odometer);
+
+      // summary: date range (oldest to newest)
+      const newestDate = parseDateSafe(rows[0].timestamp);
+      const oldestDate = parseDateSafe(rows[rows.length - 1].timestamp);
+      const rangeText = (oldestDate && newestDate)
+        ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
+        : "—";
+
+      document.getElementById("totalRecords").textContent = String(rows.length);
+      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : "—";
+      document.getElementById("dateRange").textContent = rangeText;
+
+      // render table
+      const tbody = rows.map(r => {
+        const date = formatDateShort(r.timestamp);
+        const odo = parseOdoSafe(r.odometer);
+        const service = (r.service || "—");
+        const parts = (r.parts || "—");
+        const notes = (r.notes || "—");
+
+        return `
+          <tr>
+            <td class="nowrap">${date}</td>
+            <td class="nowrap">${odo !== null ? fmtNum(odo) : (r.odometer || "—")}</td>
+            <td>${service}</td>
+            <td>${parts}</td>
+            <td>${notes}</td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("rows").innerHTML = tbody;
+
+    } catch (err) {
+      console.error("Report load failed:", err);
+      document.getElementById("rows").innerHTML =
+        `<tr><td colspan="5" class="muted">Unable to load report data.</td></tr>`;
+    }
+  }
+
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+  document.getElementById("backBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "history.html";
+    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("vehicleBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "index.html";
+    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("homeBtn").addEventListener("click", () => location.href = "index.html");
+
+  document.addEventListener("DOMContentLoaded", loadReport);
+</script>
+
+</body>
+</html>

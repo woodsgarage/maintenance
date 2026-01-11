@@ -78,7 +78,6 @@ header h1 {
   background: #0056b3;
 }
 
-
 /* ---------- VEHICLE LIST ---------- */
 .vehicle-list {
   display: flex;
@@ -205,4 +204,5 @@ footer {
   .vehicle-list { flex-direction: column; align-items: center; }
   .card { width: 90%; }
 }
+
 

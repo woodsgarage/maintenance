@@ -26,58 +26,113 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage Maintenance
+  &copy; 2026 Woods Garage
 </footer>
 
 <script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(window.location.search).get("vin");
+  const vin = new URLSearchParams(window.location.search).get("vin");
 
-// Load vehicle info from Vehicles sheet
-async function loadVehicle() {
-  try {
-    const response = await fetch(`${API_URL}?sheet=Vehicles`);
-    const vehicles = await response.json();
+  function normalizeVin(v) {
+    return String(v ?? "").trim();
+  }
 
-    const v = vehicles.find(v => (v.vin || v.VIN || "").toString().trim() === vin.trim());
-    const container = document.getElementById("vehicle-info");
+  function parseDateSafe(v) {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
 
-    if (!v) {
-      container.innerHTML = "<p>Vehicle not found.</p>";
+  function parseOdoSafe(v) {
+    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function findLastMaintenanceForVin(records, vin) {
+    const target = normalizeVin(vin);
+    const rows = (Array.isArray(records) ? records : [])
+      .filter(r => normalizeVin(r.vin || r.VIN) === target);
+
+    if (!rows.length) return null;
+
+    // Prefer latest valid timestamp
+    let latest = null;
+    for (const r of rows) {
+      const dt = parseDateSafe(r.timestamp);
+      if (!dt) continue;
+      if (!latest || dt > latest.dt) latest = { r, dt };
+    }
+
+    // Fallback: last row if timestamps are missing/unusable
+    return latest ? latest.r : rows[rows.length - 1];
+  }
+
+  // Load vehicle info + last mileage
+  async function loadVehicle() {
+    if (!vin) {
+      document.getElementById("vehicle-info").innerHTML =
+        "<p>Vehicle VIN not found.</p>";
       return;
     }
 
-    container.innerHTML = `
-      <h2>${v.name} (${v.year})</h2>
-      <p><strong>Make:</strong> ${v.make}</p>
-      <p><strong>Model:</strong> ${v.model}</p>
-      <p><strong>VIN:</strong> ${v.vin}</p>
-      <p><strong>Start Mileage:</strong> ${v.start_mileage}</p>
-    `;
-  } catch (err) {
-    console.error("Error loading vehicle dashboard:", err);
-    document.getElementById("vehicle-info").innerHTML = "<p>Unable to load vehicle info.</p>";
+    try {
+      const [vehiclesResp, maintResp] = await Promise.all([
+        fetch(`${API_URL}?sheet=Vehicles`),
+        fetch(`${API_URL}?sheet=Maintenance`)
+      ]);
+
+      if (!vehiclesResp.ok || !maintResp.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const vehicles = await vehiclesResp.json();
+      const maintenance = await maintResp.json();
+
+      const v = (Array.isArray(vehicles) ? vehicles : [])
+        .find(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
+
+      const container = document.getElementById("vehicle-info");
+
+      if (!v) {
+        container.innerHTML = "<p>Vehicle not found.</p>";
+        return;
+      }
+
+      const lastMaint = findLastMaintenanceForVin(maintenance, vin);
+      const lastOdo = lastMaint ? parseOdoSafe(lastMaint.odometer) : null;
+      const lastMileageText = lastOdo !== null
+        ? lastOdo.toLocaleString()
+        : "—";
+
+      container.innerHTML = `
+        <h2>${v.name} (${v.year})</h2>
+        <p><strong>Make:</strong> ${v.make}</p>
+        <p><strong>Model:</strong> ${v.model}</p>
+        <p><strong>VIN:</strong> ${normalizeVin(v.vin)}</p>
+        <p><strong>Last Mileage:</strong> ${lastMileageText}</p>
+      `;
+    } catch (err) {
+      console.error("Error loading vehicle dashboard:", err);
+      document.getElementById("vehicle-info").innerHTML =
+        "<p>Unable to load vehicle info.</p>";
+    }
   }
-}
 
-// Button actions
-document.getElementById("addMaintenanceBtn").addEventListener("click", () => {
-  // Go to maintenance page with VIN parameter
-  window.location.href = `maintenance.html?vin=${vin}`;
-});
+  // Button actions
+  document.getElementById("addMaintenanceBtn").addEventListener("click", () => {
+    window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+  });
 
-document.getElementById("historyBtn").addEventListener("click", () => {
-  // Go to history page with VIN parameter
-  window.location.href = `history.html?vin=${vin}`;
-});
+  document.getElementById("historyBtn").addEventListener("click", () => {
+    window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  });
 
-document.getElementById("scheduleBtn").addEventListener("click", () => {
-  // Go to schedule maintenance page with VIN parameter
-  window.location.href = `schedule.html?vin=${vin}`;
-});
+  document.getElementById("scheduleBtn").addEventListener("click", () => {
+    window.location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+  });
 
-// Load the vehicle data on page load
-loadVehicle();
+  // Load on page load
+  loadVehicle();
 </script>
+
 </body>
 </html>

@@ -29,6 +29,9 @@
         <option value="">Select Email</option>
       </select>
 
+      <label for="notes">Notes</label>
+      <textarea name="notes" id="notes" rows="3" placeholder="Optional notes about this service"></textarea>
+
       <fieldset>
         <legend>Notification Intervals (days before)</legend>
         <label><input type="checkbox" name="notify_1" value="yes">1 day</label>
@@ -40,17 +43,18 @@
       <button type="submit">Save Schedule</button>
     </form>
   </div>
+
+  <!-- Bottom Navbar with button-style links -->
+  <div class="card actions">
+    <button id="homeBtn">Home</button>
+    <button id="vehicleBtn">Vehicle Dashboard</button>
+    <button id="historyBtn">Maintenance History</button>
+    <button id="addMaintenanceBtn">Add Maintenance</button>
+  </div>
 </main>
 
-<!-- Bottom Navbar with button-style links -->
-<nav class="navbar-bottom">
-  <div class="container nav-container">
-    <a href="index.html" class="nav-button">Home</a>
-  </div>
-</nav>
-  
 <footer>
-  &copy; 2026 Woods Garage Page
+  &copy; 2026 Woods Garage
 </footer>
 
 <!-- Hidden iframe for form submission -->
@@ -74,7 +78,7 @@
     }
   };
 
-  form.addEventListener("submit", function() {
+  form.addEventListener("submit", function(event) {
     if (!vin) {
       event.preventDefault();
       return;
@@ -83,7 +87,7 @@
   });
 
   // Set form action to your deployed Apps Script Web App URL
-  form.action = "https://script.google.com/macros/s/AKfycbx-DLNrwvrkUdchq2YmibeEwr3LBmWTVpXtpg9Iz1O_o4cyVv9cfEaL40N1AsVegjUhqA/exec"; // <-- replace with Web App URL
+  form.action = "https://script.google.com/macros/s/AKfycbx-DLNrwvrkUdchq2YmibeEwr3LBmWTVpXtpg9Iz1O_o4cyVv9cfEaL40N1AsVegjUhqA/exec"; // <-- replace with your Web App URL
 
   // Populate email dropdown from Contacts sheet
   async function loadEmails() {
@@ -106,6 +110,12 @@
   }
 
   loadEmails();
+
+  // Bottom navbar button navigation
+  document.getElementById("homeBtn").addEventListener("click", () => window.location.href = "index.html");
+  document.getElementById("vehicleBtn").addEventListener("click", () => window.location.href = `vehicle.html?vin=${vin}`);
+  document.getElementById("historyBtn").addEventListener("click", () => window.location.href = `history.html?vin=${vin}`);
+  document.getElementById("addMaintenanceBtn").addEventListener("click", () => window.location.href = `maintenance.html?vin=${vin}`);
 </script>
 
 </body>

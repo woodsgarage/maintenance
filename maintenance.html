@@ -13,18 +13,23 @@
 
 <main class="container">
   <div class="card">
-    <form id="maintenanceForm">
+    <form id="maintenanceForm" method="POST" target="hidden_iframe">
+      <!-- Hidden input for type -->
+      <input type="hidden" name="type" value="maintenance">
+      <!-- VIN will be populated by JS -->
+      <input type="hidden" name="vin" id="vinField">
+
       <label for="odometer">Odometer</label>
-      <input type="number" id="odometer" required>
+      <input type="number" name="odometer" id="odometer" required>
 
       <label for="service">Service</label>
-      <input type="text" id="service" required>
+      <input type="text" name="service" id="service" required>
 
       <label for="parts">Parts</label>
-      <input type="text" id="parts">
+      <input type="text" name="parts" id="parts">
 
       <label for="notes">Notes</label>
-      <textarea id="notes" rows="3"></textarea>
+      <textarea name="notes" id="notes" rows="3"></textarea>
 
       <button type="submit">Save Maintenance</button>
     </form>
@@ -32,57 +37,43 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage
+  &copy; 2026 Woods Garage Maintenance
 </footer>
 
-<script src="app.js"></script>
+<!-- Hidden iframe for form submission -->
+<iframe name="hidden_iframe" style="display:none;"></iframe>
+
 <script>
-  // Get VIN from URL
+  // Grab VIN from URL
   const vin = new URLSearchParams(window.location.search).get("vin");
+  if (!vin) {
+    alert("Vehicle VIN not found. Cannot save maintenance.");
+  } else {
+    document.getElementById("vinField").value = vin;
+  }
 
-  // Handle form submission
-  document.getElementById("maintenanceForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  // Redirect after form submission
+  const form = document.getElementById("maintenanceForm");
+  const iframe = document.getElementsByName("hidden_iframe")[0];
 
+  iframe.onload = function() {
+    // Only redirect if the form was actually submitted
+    if (form.dataset.submitted === "true") {
+      window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+    }
+  };
+
+  form.addEventListener("submit", function() {
     if (!vin) {
-      alert("Vehicle VIN not found. Cannot save maintenance.");
+      // Prevent submission if no VIN
+      event.preventDefault();
       return;
     }
-
-    const odometer = document.getElementById("odometer").value.trim();
-    const service = document.getElementById("service").value.trim();
-    const parts = document.getElementById("parts").value.trim();
-    const notes = document.getElementById("notes").value.trim();
-
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          sheet: "Maintenance",
-          vin: vin.trim(),
-          odometer,
-          service,
-          parts,
-          notes
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.status === "success") {
-        // Redirect to vehicle dashboard with VIN after saving
-        window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-      } else {
-        alert("Error saving maintenance: " + (result.message || ""));
-      }
-    } catch (err) {
-      console.error("Error saving maintenance:", err);
-      alert("Error saving maintenance. Check console for details.");
-    }
+    form.dataset.submitted = "true";
   });
+
+  // Set the form action to your deployed Apps Script Web App URL
+  form.action = "YOUR_WEB_APP_URL_HERE"; // <-- replace with your Web App URL
 </script>
 
 </body>

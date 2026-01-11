@@ -51,11 +51,10 @@ header h1 {
   box-shadow: 0 20px 30px rgba(0,0,0,0.18);
 }
 
-/* ---------- NAVBAR ---------- */
+/* ---------- NAVBAR BUTTONS ---------- */
 .navbar {
-  background: #007bff; /* same blue as header */
-  padding: 0.8rem 1rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  background: transparent; /* navbar itself can be transparent or match header */
+  padding: 1rem 0;
 }
 
 .navbar .nav-container {
@@ -65,18 +64,27 @@ header h1 {
   gap: 1rem;
 }
 
-.navbar a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  padding: 0.4rem 0.8rem;
+.navbar .nav-button {
+  background: #007bff; /* same as your buttons */
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
   border-radius: 8px;
-  transition: background 0.2s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+  text-decoration: none; /* remove underline for <a> */
+  display: inline-block;
 }
 
-.navbar a:hover {
+.navbar .nav-button:hover {
   background: #0056b3;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
+
 
 /* ---------- VEHICLE LIST ---------- */
 .vehicle-list {
@@ -204,5 +212,6 @@ footer {
   .vehicle-list { flex-direction: column; align-items: center; }
   .card { width: 90%; }
 }
+
 
 

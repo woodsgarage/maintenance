@@ -1,39 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Add Maintenance</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Add Maintenance</h1>
+<header>
+  <h1>Add Maintenance Record</h1>
+</header>
 
-<form id="f">
-  <input id="odo" placeholder="Odometer" required><br>
-  <input id="service" placeholder="Service" required><br>
-  <input id="parts" placeholder="Parts"><br>
-  <textarea id="notes" placeholder="Notes"></textarea><br>
-  <button>Save</button>
-</form>
+<main class="container">
+  <form id="maintenanceForm" class="card">
+    <label for="odometer">Odometer</label>
+    <input type="number" id="odometer" required>
 
+    <label for="service">Service</label>
+    <input type="text" id="service" required>
+
+    <label for="parts">Parts</label>
+    <input type="text" id="parts">
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" rows="3"></textarea>
+
+    <button type="submit">Save Maintenance</button>
+  </form>
+</main>
+
+<footer>
+  &copy; 2026 Woods Garage Maintenance
+</footer>
+
+<script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(location.search).get("vin");
+const vin = new URLSearchParams(window.location.search).get("vin");
 
-f.onsubmit = e => {
-  e.preventDefault();
-  fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      type:"maintenance",
-      vin,
-      odometer:odo.value,
-      service:service.value,
-      parts:parts.value,
-      notes:notes.value
-    })
-  }).then(() => alert("Saved"));
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("maintenanceForm");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const odometer = document.getElementById("odometer").value;
+    const service = document.getElementById("service").value;
+    const parts = document.getElementById("parts").value;
+    const notes = document.getElementById("notes").value;
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          vin,
+          odometer,
+          service,
+          parts,
+          notes
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        alert("Maintenance record saved!");
+        window.location.href = `vehicle.html?vin=${vin}`;
+      } else {
+        alert("Failed to save maintenance record.");
+      }
+
+    } catch (err) {
+      console.error("Error saving maintenance:", err);
+      alert("Error saving maintenance record.");
+    }
+  });
+});
 </script>
-
 </body>
 </html>

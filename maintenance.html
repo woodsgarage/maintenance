@@ -141,7 +141,7 @@
 </main>
 
 <footer>
-  &copy; 2026 Woods Garage
+  &copy; 2026 Woods Garage Maintenance
 </footer>
 
 <iframe name="hidden_iframe" style="display:none;"></iframe>
@@ -161,6 +161,7 @@
   const saveAnotherBtn = document.getElementById("saveAnotherBtn");
 
   let submitMode = "return"; // "return" | "another"
+  let lastRecordedOdo = null; // numeric or null
 
   if (!vin) {
     alert("Vehicle VIN not found. Cannot save maintenance.");
@@ -210,6 +211,7 @@
       const lastRecord = await getLastMaintenanceForVin();
 
       if (!lastRecord) {
+        lastRecordedOdo = null;
         odometerHint.textContent = "No prior maintenance records found.";
         odometerInput.min = "0";
         return;
@@ -217,16 +219,19 @@
 
       const lastOdo = parseOdoSafe(lastRecord.odometer);
       if (lastOdo === null) {
+        lastRecordedOdo = null;
         odometerHint.textContent = "Could not read previous odometer.";
         odometerInput.min = "0";
         return;
       }
 
+      lastRecordedOdo = lastOdo;
+
       if (mode === "suggest") {
         const suggested = lastOdo + 100;
 
         // Prefill suggested, but DO NOT require it.
-        // Validation on submit enforces last + 1 minimum.
+        // Requirement is only: entered odometer must not be less than previous.
         odometerInput.value = suggested;
         odometerInput.min = "0";
 
@@ -240,6 +245,7 @@
       }
     } catch (err) {
       console.error("Prefill odometer failed:", err);
+      lastRecordedOdo = null;
       odometerHint.textContent = "Could not load previous odometer.";
       odometerInput.min = "0";
     }
@@ -255,9 +261,7 @@
     saveAnotherBtn.textContent = isSubmitting ? "Saving..." : "Save & Add Another";
   }
 
-  // ✅ Keep styling/layout unchanged; only change behavior:
-  // - Allow editing away from suggested +100
-  // - Enforce odometer >= last + 1 at save time
+  // ✅ Only require: odometer must NOT be less than previous recorded odometer
   form.addEventListener("submit", async (e) => {
     e.preventDefault(); // validate first, then submit
 
@@ -278,24 +282,23 @@
     setSubmitting(true);
 
     try {
-      const lastRecord = await getLastMaintenanceForVin();
-
-      if (lastRecord) {
-        const lastOdo = parseOdoSafe(lastRecord.odometer);
-
-        if (lastOdo !== null) {
-          const requiredMin = lastOdo + 1;
-
-          if (currentOdo < requiredMin) {
-            setSubmitting(false);
-            alert(
-              `Odometer must be at least ${requiredMin.toLocaleString()} ` +
-              `(last recorded was ${lastOdo.toLocaleString()}).`
-            );
-            odometerInput.focus();
-            return;
-          }
+      // If we don't have lastRecordedOdo yet (slow load / no prefill), fetch now
+      if (lastRecordedOdo === null) {
+        const lastRecord = await getLastMaintenanceForVin();
+        if (lastRecord) {
+          const lastOdo = parseOdoSafe(lastRecord.odometer);
+          if (lastOdo !== null) lastRecordedOdo = lastOdo;
         }
+      }
+
+      if (lastRecordedOdo !== null && currentOdo < lastRecordedOdo) {
+        setSubmitting(false);
+        alert(
+          `Odometer cannot be less than the last recorded value ` +
+          `(${lastRecordedOdo.toLocaleString()}).`
+        );
+        odometerInput.focus();
+        return;
       }
 
       // Submit to hidden iframe after validation

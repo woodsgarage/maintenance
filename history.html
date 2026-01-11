@@ -12,6 +12,10 @@
 </header>
 
 <main class="container">
+  <div class="card actions">
+    <button id="printReportBtn">Print Professional PDF</button>
+  </div>
+
   <div id="history-list">
     <!-- Maintenance records will load here -->
   </div>
@@ -109,6 +113,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!vin) {
     alert("Vehicle VIN not found. Maintenance history may not load correctly.");
   }
+
+  const printBtn = document.getElementById("printReportBtn");
+  if (printBtn) {
+    printBtn.addEventListener("click", () => {
+      if (!vin) {
+        alert("Vehicle VIN not found. Cannot generate report.");
+        return;
+      }
+      window.location.href = `report.html?vin=${encodeURIComponent(vin)}`;
+    });
+  }
+
   fetchMaintenance(vin, "history-list");
   updateNavLinks(vin);
 });

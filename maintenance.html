@@ -224,21 +224,23 @@
 
       lastRecordedOdo = lastOdo;
 
+      // ✅ Enforce minimum = last recorded (prevents going backwards)
+      odometerInput.min = String(lastOdo);
+
       if (mode === "suggest") {
         const suggested = lastOdo + 100;
 
-        // Prefill suggested, but DO NOT require it.
-        // Requirement is only: entered odometer must not be less than previous.
-        odometerInput.value = suggested;
-        odometerInput.min = "0";
+        // Prefill suggested (+100), but user can change it as long as >= last recorded
+        odometerInput.value = String(suggested);
 
         odometerHint.textContent =
-          `Last: ${lastOdo.toLocaleString()} → suggested: ${suggested.toLocaleString()} (editable)`;
+          `Last: ${lastOdo.toLocaleString()} → suggested: ${suggested.toLocaleString()} (min: ${lastOdo.toLocaleString()})`;
       } else {
         // On Save & Add Another: prefill exact last odometer (no increment)
-        odometerInput.value = lastOdo;
-        odometerInput.min = "0";
-        odometerHint.textContent = `Last recorded odometer: ${lastOdo.toLocaleString()}`;
+        odometerInput.value = String(lastOdo);
+
+        odometerHint.textContent =
+          `Last recorded odometer: ${lastOdo.toLocaleString()} (min: ${lastOdo.toLocaleString()})`;
       }
     } catch (err) {
       console.error("Prefill odometer failed:", err);
@@ -258,7 +260,7 @@
     saveAnotherBtn.textContent = isSubmitting ? "Saving..." : "Save & Add Another";
   }
 
-  // ✅ Only require: odometer must NOT be less than previous recorded odometer
+  // ✅ Require: odometer must NOT be less than previous recorded odometer
   form.addEventListener("submit", async (e) => {
     e.preventDefault(); // validate first, then submit
 
@@ -330,11 +332,18 @@
   };
 
   document.getElementById("homeBtn").onclick = () => location.href = "index.html";
-  document.getElementById("vehicleBtn").onclick = () => location.href = `vehicle.html?vin=${vin}`;
-  document.getElementById("historyBtn").onclick = () => location.href = `history.html?vin=${vin}`;
-  document.getElementById("scheduleBtn").onclick = () => location.href = `schedule.html?vin=${vin}`;
 
-  // Initial load: show suggested +100 but allow editing.
+  // Guard these in case the buttons are not present on this page
+  const vehicleBtn = document.getElementById("vehicleBtn");
+  if (vehicleBtn) vehicleBtn.onclick = () => location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+
+  const historyBtn = document.getElementById("historyBtn");
+  if (historyBtn) historyBtn.onclick = () => location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+
+  const scheduleBtn = document.getElementById("scheduleBtn");
+  if (scheduleBtn) scheduleBtn.onclick = () => location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+
+  // Initial load: show suggested +100, enforce minimum as last recorded odometer.
   document.addEventListener("DOMContentLoaded", () => prefillLastOdometer("suggest"));
 </script>
 

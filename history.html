@@ -12,21 +12,18 @@
 </header>
 
 <main class="container">
-  <div class="card actions">
-    <button id="printReportBtn">Print Professional PDF</button>
-  </div>
 
   <div id="history-list">
     <!-- Maintenance records will load here -->
   </div>
-</main>
 
-<!-- Bottom Navbar with button-style links -->
-<nav class="navbar-bottom">
-  <div class="container nav-container">
+  <!-- Bottom Actions Card -->
+  <div class="card actions">
     <a href="index.html" class="nav-button">Home</a>
+    <button id="printReportBtn">Print Report</button>
   </div>
-</nav>
+
+</main>
 
 <footer>
   &copy; 2026 Woods Garage
@@ -55,9 +52,10 @@ async function fetchMaintenance(vin, containerId) {
 
     container.innerHTML = vehicleRecords.map(r => {
       const date = r.timestamp ? new Date(r.timestamp) : null;
-      const dateStr = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A";
+      const dateStr = date
+        ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : "N/A";
 
-      // NEW: record_id (added to Maintenance sheet as last column)
       const recordId = (r.record_id || "").toString().trim();
       const canEdit = Boolean(recordId);
 
@@ -90,9 +88,8 @@ async function fetchMaintenance(vin, containerId) {
   }
 }
 
-// NEW: Navigate to edit page
+// Navigate to edit page
 function editRecord(vinEncoded, idEncoded) {
-  // vinEncoded and idEncoded are already encodeURIComponent()'d
   window.location.href = `edit-maintenance.html?vin=${vinEncoded}&id=${idEncoded}`;
 }
 

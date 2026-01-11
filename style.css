@@ -1,80 +1,179 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Add Maintenance</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+/* ---------- GENERAL ---------- */
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background: #e0e5ec;
+  color: #333;
+}
 
-<header>
-  <h1>Add Maintenance Record</h1>
-</header>
+a { text-decoration: none; color: inherit; }
 
-<main class="container">
-  <form id="maintenanceForm" class="card">
-    <label for="odometer">Odometer</label>
-    <input type="number" id="odometer" required>
+/* ---------- HEADER ---------- */
+header {
+  background: #007bff; /* Traditional blue */
+  color: #fff;
+  text-align: center;
+  padding: 2rem 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
 
-    <label for="service">Service</label>
-    <input type="text" id="service" required>
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
 
-    <label for="parts">Parts</label>
-    <input type="text" id="parts">
+/* ---------- MAIN CONTAINER ---------- */
+.container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-    <label for="notes">Notes</label>
-    <textarea id="notes" rows="3"></textarea>
+/* ---------- CARDS ---------- */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
 
-    <button type="submit">Save Maintenance</button>
-  </form>
-</main>
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 30px rgba(0,0,0,0.18);
+}
 
-<footer>
-  &copy; 2026 Woods Garage Maintenance
-</footer>
+/* ---------- VEHICLE LIST ---------- */
+.vehicle-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+}
 
-<script src="app.js"></script>
-<script>
-const vin = new URLSearchParams(window.location.search).get("vin");
+.vehicle-card {
+  cursor: pointer;
+  flex: 1 1 250px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("maintenanceForm");
+.vehicle-card h2 {
+  margin: 0.5rem 0;
+  font-size: 1.4rem;
+  color: #4b4b4b;
+}
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+.vehicle-card p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #555;
+}
 
-    const odometer = document.getElementById("odometer").value;
-    const service = document.getElementById("service").value;
-    const parts = document.getElementById("parts").value;
-    const notes = document.getElementById("notes").value;
+.vehicle-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+}
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          vin,
-          odometer,
-          service,
-          parts,
-          notes
-        }),
-      });
+/* ---------- FORM ELEMENTS ---------- */
+form label {
+  display: block;
+  font-weight: 600;
+  margin-top: 1rem;
+}
 
-      const result = await response.json();
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin-top: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
 
-      if (result.status === "success") {
-        alert("Maintenance record saved!");
-        window.location.href = `vehicle.html?vin=${vin}`;
-      } else {
-        alert("Failed to save maintenance record.");
-      }
+form input:focus,
+form select:focus,
+form textarea:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 5px rgba(0,86,179,0.4);
+  outline: none;
+}
 
-    } catch (err) {
-      console.error("Error saving maintenance:", err);
-      alert("Error saving maintenance record.");
-    }
-  });
-});
-</script>
-</body>
-</html>
+/* ---------- BUTTONS ---------- */
+button {
+  background: #007bff; /* Traditional blue */
+  color: white;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  margin-top: 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  background: #0056b3;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* ---------- FIELDSET ---------- */
+fieldset {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #f9f9f9;
+}
+
+legend {
+  font-weight: bold;
+  padding: 0 0.5rem;
+  color: #4b4b4b;
+}
+
+/* ---------- CHECKBOX ALIGNMENT ---------- */
+fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* space between checkbox and text */
+  margin-bottom: 0.5rem;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+fieldset input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0; /* remove default margin */
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+  text-align: center;
+  padding: 1rem;
+  background: #f5f5f5;
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 3rem;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 600px) {
+  .vehicle-list { flex-direction: column; align-items: center; }
+  .card { width: 90%; }
+}

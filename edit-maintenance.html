@@ -92,17 +92,29 @@
           <div class="error" id="odometerError" style="display:none;"></div>
         </div>
 
+        <!-- Date Performed -->
+        <div>
+          <label for="date_performed">Date Performed</label>
+          <input
+            type="date"
+            name="date_performed"
+            id="date_performed"
+            required
+          >
+        </div>
+
         <!-- Service -->
         <div class="full">
-  <label for="service"><strong>Service</strong></label>
-  <textarea
-    id="service"
-    name="service"
-    rows="3"
-    placeholder="Press Enter to add each service on a new line"
-    required
-  ></textarea>
-</div>
+          <label for="service"><strong>Service</strong></label>
+          <textarea
+            id="service"
+            name="service"
+            rows="3"
+            placeholder="Press Enter to add each service on a new line"
+            required
+          ></textarea>
+        </div>
+
         <!-- Parts -->
         <div class="full">
           <label for="parts">Parts</label>
@@ -169,6 +181,7 @@
   const odometerHint = document.getElementById("odometerHint");
   const odometerError = document.getElementById("odometerError");
 
+  const datePerformedInput = document.getElementById("date_performed");
   const serviceInput = document.getElementById("service");
   const partsInput = document.getElementById("parts");
   const notesInput = document.getElementById("notes");
@@ -218,6 +231,15 @@
     odometerError.textContent = msg;
   }
 
+  function toDateInputValue(val) {
+    const d = parseDateSafe(val);
+    if (!d) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
   async function loadRecordAndContext() {
     if (!vin || !recordId) return;
 
@@ -236,6 +258,7 @@
 
       // Prefill form
       odometerInput.value = target.odometer ?? "";
+      datePerformedInput.value = toDateInputValue(target.date_performed) || "";
       serviceInput.value = target.service ?? "";
       partsInput.value = target.parts ?? "";
       notesInput.value = target.notes ?? "";
@@ -289,6 +312,13 @@
     // Block submit if invalid
     if (!validateOdometer()) {
       e.preventDefault();
+      return;
+    }
+
+    if (!datePerformedInput.value) {
+      e.preventDefault();
+      alert("Please select Date Performed.");
+      datePerformedInput.focus();
       return;
     }
 

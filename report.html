@@ -187,7 +187,7 @@
 
     .nowrap { white-space: nowrap; }
 
-    /* NEW: Multi-line bullets for Service column only */
+    /* Multi-line bullets for Service column only */
     .mlist {
       margin: 0;
       padding-left: 1.1rem;
@@ -207,7 +207,7 @@
       font-size: 0.9rem;
     }
 
-    /* NEW: Bottom actions spacing + centering (scoped to this page only) */
+    /* Bottom actions spacing + centering (scoped to this page only) */
     #bottomActions {
       margin-top: 1rem;        /* keeps it from touching the paper */
       margin-left: auto;       /* ensures the card itself centers within report-shell */
@@ -317,7 +317,7 @@
         <table>
           <thead>
             <tr>
-              <th class="nowrap">Date</th>
+              <th class="nowrap">Date Performed</th>
               <th class="nowrap">Odometer</th>
               <th>Service</th>
               <th>Parts</th>
@@ -466,15 +466,15 @@
         return;
       }
 
-      // sort newest first for table display
-      rows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      // sort newest first for table display (prefer date_performed, fallback to timestamp)
+      rows.sort((a, b) => new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp));
 
       // summary: last mileage is newest record odometer (if parseable)
       const lastOdo = parseOdoSafe(rows[0].odometer);
 
-      // summary: date range (oldest to newest)
-      const newestDate = parseDateSafe(rows[0].timestamp);
-      const oldestDate = parseDateSafe(rows[rows.length - 1].timestamp);
+      // summary: date range (oldest to newest) using date_performed fallback timestamp
+      const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
+      const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
       const rangeText = (oldestDate && newestDate)
         ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
         : "—";
@@ -485,7 +485,7 @@
 
       // render table
       const tbody = rows.map(r => {
-        const date = formatDateShort(r.timestamp);
+        const date = formatDateShort(r.date_performed || r.timestamp);
         const odo = parseOdoSafe(r.odometer);
         const service = serviceAsBullets(r.service);
         const parts = (r.parts || "—");

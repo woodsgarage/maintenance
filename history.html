@@ -5,7 +5,7 @@
   <title>Maintenance History</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- Page-local only: center bottom buttons nicely on mobile -->
+  <!-- Page-local only -->
   <style>
     #bottomActions {
       display: flex;
@@ -21,6 +21,17 @@
       #bottomActions button {
         min-width: 160px;
       }
+    }
+
+    /* Emphasize primary action (Add Maintenance) */
+    .primary-action {
+      background-color: #1f6feb;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .primary-action:hover {
+      background-color: #1856b3;
     }
 
     /* Bulleted lists for Service / Parts */
@@ -52,8 +63,13 @@
       Home
     </button>
 
-    <!-- NEW: Add Maintenance -->
-    <button type="button" id="addMaintenanceBtn">
+    <!-- Add Maintenance (primary action) -->
+    <button
+      type="button"
+      id="addMaintenanceBtn"
+      class="primary-action"
+      style="display:none;"
+    >
       Add Maintenance
     </button>
 
@@ -127,4 +143,57 @@ async function fetchMaintenance(vin, containerId) {
           ${canEdit ? `
             <div class="actions">
               <button type="button"
-                onclick="editRecord('${enco
+                onclick="editRecord('${encodeURIComponent(vin || '')}','${encodeURIComponent(recordId)}')">
+                Edit
+              </button>
+            </div>
+          ` : `
+            <p style="font-size:0.9rem;color:#666;margin-top:1rem;">
+              Edit unavailable for this record (missing record_id).
+            </p>
+          `}
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("Error fetching maintenance history:", err);
+    document.getElementById(containerId).innerHTML =
+      "<p>Unable to load maintenance history.</p>";
+    const printBtn = document.getElementById("printReportBtn");
+    if (printBtn) printBtn.style.display = "none";
+  }
+}
+
+// Navigate to edit page
+function editRecord(vinEncoded, idEncoded) {
+  window.location.href = `edit-maintenance.html?vin=${vinEncoded}&id=${idEncoded}`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const addBtn = document.getElementById("addMaintenanceBtn");
+
+  // Only show Add Maintenance if VIN exists
+  if (vin && addBtn) {
+    addBtn.style.display = "";
+    addBtn.addEventListener("click", () => {
+      window.location.href = `maintenance.html?vin=${encodeURIComponent(vin)}`;
+    });
+  }
+
+  const printBtn = document.getElementById("printReportBtn");
+  if (printBtn) {
+    printBtn.addEventListener("click", () => {
+      if (!vin) {
+        alert("Vehicle VIN not found. Cannot generate report.");
+        return;
+      }
+      window.location.href = `report.html?vin=${encodeURIComponent(vin)}`;
+    });
+  }
+
+  fetchMaintenance(vin, "history-list");
+});
+</script>
+</body>
+</html>

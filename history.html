@@ -62,7 +62,11 @@ async function fetchMaintenance(vin, containerId) {
 
     const vehicleRecords = (Array.isArray(records) ? records : [])
       .filter(r => (r.vin || r.VIN || "").toString().trim() === (vin || "").trim())
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      .sort((a, b) => {
+        const bd = new Date(b.date_performed || b.timestamp);
+        const ad = new Date(a.date_performed || a.timestamp);
+        return bd - ad;
+      });
 
     const container = document.getElementById(containerId);
     const printBtn = document.getElementById("printReportBtn");
@@ -76,7 +80,8 @@ async function fetchMaintenance(vin, containerId) {
     if (printBtn) printBtn.style.display = "";
 
     container.innerHTML = vehicleRecords.map(r => {
-      const date = r.timestamp ? new Date(r.timestamp) : null;
+      const dateVal = r.date_performed || r.timestamp;
+      const date = dateVal ? new Date(dateVal) : null;
       const dateStr = date
         ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : "N/A";
@@ -86,7 +91,7 @@ async function fetchMaintenance(vin, containerId) {
 
       return `
         <div class="card">
-          <p><strong>Date:</strong> ${dateStr}</p>
+          <p><strong>Date Performed:</strong> ${dateStr}</p>
           <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
           <p><strong>Service:</strong> <span style="white-space:pre-line;">${r.service || "N/A"}</span></p>
           <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>

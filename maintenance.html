@@ -83,17 +83,29 @@
           <div class="hint" id="odometerHint"></div>
         </div>
 
+        <!-- Date Performed -->
+        <div>
+          <label for="date_performed">Date Performed</label>
+          <input
+            type="date"
+            name="date_performed"
+            id="date_performed"
+            required
+          >
+        </div>
+
         <!-- Service -->
-<div class="full">
-  <label for="service"><strong>Service</strong></label>
-  <textarea
-    id="service"
-    name="service"
-    rows="3"
-    placeholder="Press Enter to add each service on a new line"
-    required
-  ></textarea>
-</div>
+        <div class="full">
+          <label for="service"><strong>Service</strong></label>
+          <textarea
+            id="service"
+            name="service"
+            rows="3"
+            placeholder="Press Enter to add each service on a new line"
+            required
+          ></textarea>
+        </div>
+
         <!-- Parts -->
         <div class="full">
           <label for="parts">Parts</label>
@@ -148,6 +160,7 @@
 
   const odometerInput = document.getElementById("odometer");
   const odometerHint = document.getElementById("odometerHint");
+  const datePerformedInput = document.getElementById("date_performed");
   const serviceInput = document.getElementById("service");
   const partsInput = document.getElementById("parts");
   const notesInput = document.getElementById("notes");
@@ -276,6 +289,12 @@
       return;
     }
 
+    if (!datePerformedInput.value) {
+      alert("Please select Date Performed.");
+      datePerformedInput.focus();
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -325,6 +344,9 @@
     notesInput.value = "";
     serviceInput.focus();
 
+    // Default Date Performed to today for next entry
+    if (datePerformedInput) datePerformedInput.valueAsDate = new Date();
+
     // 🔁 Re-fetch Maintenance and prefill LAST odometer exactly (no increment)
     await prefillLastOdometer("exact");
   };
@@ -342,7 +364,10 @@
   if (scheduleBtn) scheduleBtn.onclick = () => location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
 
   // Initial load: show suggested +100, enforce minimum as last recorded odometer.
-  document.addEventListener("DOMContentLoaded", () => prefillLastOdometer("suggest"));
+  document.addEventListener("DOMContentLoaded", () => {
+    if (datePerformedInput && !datePerformedInput.value) datePerformedInput.valueAsDate = new Date();
+    prefillLastOdometer("suggest");
+  });
 </script>
 
 </body>

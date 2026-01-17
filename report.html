@@ -187,7 +187,7 @@
 
     .nowrap { white-space: nowrap; }
 
-    /* Multi-line bullets for Service column only */
+    /* Multi-line bullets (used by shared helper) */
     .mlist {
       margin: 0;
       padding-left: 1.1rem;
@@ -209,12 +209,12 @@
 
     /* Bottom actions spacing + centering (scoped to this page only) */
     #bottomActions {
-      margin-top: 1rem;        /* keeps it from touching the paper */
-      margin-left: auto;       /* ensures the card itself centers within report-shell */
+      margin-top: 1rem;
+      margin-left: auto;
       margin-right: auto;
       width: 100%;
-      max-width: 900px;        /* matches report-shell max width */
-      display: flex;           /* keeps button layout identical */
+      max-width: 900px;
+      display: flex;
       justify-content: center;
       gap: 0.75rem;
       flex-wrap: wrap;
@@ -251,7 +251,6 @@
         border-radius: 0 !important;
       }
 
-      /* Avoid row splitting */
       tr, td, th {
         page-break-inside: avoid;
       }
@@ -384,36 +383,12 @@
   }
 
   function makeReportNo(vin) {
-    // simple deterministic-ish report number for display
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, "0");
     const d = String(now.getDate()).padStart(2, "0");
     const tail = (vin || "").slice(-6).toUpperCase();
     return `WG-${y}${m}${d}-${tail || "REPORT"}`;
-  }
-
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
-  function serviceAsBullets(text) {
-    const raw = String(text ?? "").trim();
-    if (!raw) return "—";
-
-    const lines = raw
-      .split(/\r?\n/)
-      .map(l => l.trim())
-      .filter(Boolean);
-
-    if (lines.length <= 1) return escapeHtml(raw);
-
-    return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
   }
 
   async function loadReport() {
@@ -424,7 +399,14 @@
       return;
     }
 
-    // header fields
+    const bullets = (window.WG && window.WG.renderMultilineBullets)
+      ? window.WG.renderMultilineBullets
+      : (t => (t ? String(t) : "—"));
+
+    const esc = (window.WG && window.WG.escapeHtml)
+      ? window.WG.escapeHtml
+      : (t => String(t ?? ""));
+
     document.getElementById("vinDisplay").textContent = vin;
     document.getElementById("generatedOn").textContent = new Date().toLocaleString();
     document.getElementById("reportNo").textContent = makeReportNo(vin);
@@ -466,13 +448,13 @@
         return;
       }
 
-      // sort newest first for table display (prefer date_performed, fallback to timestamp)
-      rows.sort((a, b) => new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp));
+      rows.sort((a, b) =>
+        new Date(b.date_performed || b.timestamp) -
+        new Date(a.date_performed || a.timestamp)
+      );
 
-      // summary: last mileage is newest record odometer (if parseable)
       const lastOdo = parseOdoSafe(rows[0].odometer);
 
-      // summary: date range (oldest to newest) using date_performed fallback timestamp
       const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
       const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
       const rangeText = (oldestDate && newestDate)
@@ -483,13 +465,13 @@
       document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : "—";
       document.getElementById("dateRange").textContent = rangeText;
 
-      // render table
       const tbody = rows.map(r => {
         const date = formatDateShort(r.date_performed || r.timestamp);
         const odo = parseOdoSafe(r.odometer);
-        const service = serviceAsBullets(r.service);
-        const parts = (r.parts || "—");
-        const notes = (r.notes || "—");
+
+        const service = bullets(r.service);
+        const parts = bullets(r.parts);
+        const notes = esc(r.notes || "—");
 
         return `
           <tr>

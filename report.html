@@ -6,21 +6,14 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* ---------- Premium Entry-Style Report (Scoped) ---------- */
-
     :root {
       --ink: #0f172a;
       --muted: #475569;
       --line: #e2e8f0;
       --paper: #ffffff;
 
-      /* Brand tone */
       --accent: #1f6feb;
-
-      /* Tuned: a bit stronger, still print-friendly */
       --accent-soft: #e6efff;
-
-      /* Header background */
       --header-bg: #eef5ff;
     }
 
@@ -40,36 +33,25 @@
       color: var(--ink);
     }
 
-    /* ---------- Header with background ---------- */
+    /* Header */
     .shop-header {
       display: grid;
       grid-template-columns: 1fr;
       gap: 0.75rem;
       padding: 1rem;
-
-      /* Full-bleed look on screen (safe because paper has padding) */
       margin: -1.25rem -1.25rem 1rem -1.25rem;
-
       background: var(--header-bg);
       border-bottom: 3px solid var(--accent);
       border-radius: 16px 16px 0 0;
     }
 
     @media (min-width: 700px) {
-      .shop-header {
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-      }
+      .shop-header { grid-template-columns: 1fr 1fr; align-items: center; }
     }
 
-    .shop-brand h2 {
-      margin: 0;
-      font-size: 1.45rem;
-      letter-spacing: 0.8px;
-    }
+    .shop-brand h2 { margin: 0; font-size: 1.45rem; letter-spacing: 0.8px; }
 
-    .shop-brand p,
-    .shop-meta p {
+    .shop-brand p, .shop-meta p {
       margin: 0.15rem 0;
       color: var(--muted);
       font-size: 0.95rem;
@@ -78,7 +60,7 @@
     .shop-meta { text-align: left; }
     @media (min-width: 700px) { .shop-meta { text-align: right; } }
 
-    /* ---------- Blocks ---------- */
+    /* Blocks */
     .block {
       margin-top: 1rem;
       border: 1px solid var(--line);
@@ -95,38 +77,15 @@
       margin-bottom: 0.5rem;
     }
 
-    /* Vehicle info */
-    .kv-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.4rem 1rem;
-    }
-    @media (min-width: 700px) {
-      .kv-grid { grid-template-columns: 1fr 1fr; }
-    }
+    .kv-grid { display: grid; grid-template-columns: 1fr; gap: 0.4rem 1rem; }
+    @media (min-width: 700px) { .kv-grid { grid-template-columns: 1fr 1fr; } }
 
-    .kv {
-      display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 0.5rem;
-    }
+    .kv { display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem; }
+    .k { font-weight: 700; color: var(--ink); white-space: nowrap; font-size: 0.92rem; }
 
-    .k {
-      font-weight: 700;
-      color: var(--ink);
-      white-space: nowrap;
-      font-size: 0.92rem;
-    }
-
-    /* ---------- Summary ---------- */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.5rem 1rem;
-    }
-    @media (min-width: 700px) {
-      .summary-grid { grid-template-columns: 1fr 1fr 1fr; }
-    }
+    /* Summary */
+    .summary-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem 1rem; }
+    @media (min-width: 700px) { .summary-grid { grid-template-columns: 1fr 1fr 1fr; } }
 
     .summary-card {
       border: 1px solid var(--line);
@@ -149,7 +108,7 @@
       color: var(--accent);
     }
 
-    /* ---------- Maintenance entries (NO TABLE) ---------- */
+    /* Entries */
     .entries {
       margin-top: 1rem;
       display: flex;
@@ -164,8 +123,6 @@
       background: #fff;
       break-inside: avoid;
       page-break-inside: avoid;
-
-      /* Helps prevent orphaned headers by encouraging earlier breaks */
       min-height: 5.6rem;
     }
 
@@ -178,44 +135,25 @@
       font-weight: 900;
       color: var(--ink);
       letter-spacing: 0.2px;
-
       break-inside: avoid;
       page-break-inside: avoid;
     }
 
-    .entry-section {
-      margin-top: 0.45rem;
-    }
-    .entry-section.first {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
+    .entry-section { margin-top: 0.45rem; }
+    .entry-section.first { break-inside: avoid; page-break-inside: avoid; }
 
-    /* Bullets */
-    .mlist {
-      margin: 0.15rem 0 0 1rem;
-      padding: 0;
-    }
+    .mlist { margin: 0.15rem 0 0 1rem; padding: 0; }
     .mlist li { margin: 0 0 0.15rem 0; }
     .mlist li::marker { color: #94a3b8; }
 
-    /* Footer */
-    .report-footer {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
+    .report-footer { margin-top: 1rem; font-size: 0.9rem; color: var(--muted); }
 
     /* ------------------------------------------------------------
-       Bottom actions (CENTERED)
-       Annotation:
-       - The buttons were previously "visually off-center" because
-         the actions card didn't enforce the same width + horizontal
-         centering rules as the report shell/paper.
-       - Fix:
-         1) margin-left/right: auto centers the card itself.
-         2) max-width matches .report-shell so it aligns with the report.
-         3) justify-content:center centers the buttons inside the card.
+       Bottom actions width fix
+       - Instead of width:100% (which can exceed the paper due to global
+         card/container styling), we make the actions card follow the
+         same max-width as the report shell AND visually match the paper.
+       - We also reset any global stretch behavior by using inline-flex.
        ------------------------------------------------------------ */
     #bottomActions {
       margin-top: 1rem;
@@ -224,16 +162,22 @@
       margin-left: auto;
       margin-right: auto;
 
-      /* Match the report width */
-      width: 100%;
+      /* Match report width constraints */
       max-width: 900px;
 
-      /* Center the buttons inside the card */
-      display: flex;
+      /* Prevent "full-width stretch" look */
+      display: inline-flex;
       justify-content: center;
       gap: 0.75rem;
       flex-wrap: wrap;
+
+      /* Make the card size itself to its content but not exceed paper width */
+      width: auto;
     }
+
+    /* Ensure the action card aligns to paper edges by matching the paper's visual width */
+    .report-shell { text-align: center; }     /* centers inline-flex card */
+    .report-shell .paper { text-align: left; }/* keep report content left aligned */
 
     /* Print rules */
     @page { margin: 0.5in; }
@@ -241,7 +185,6 @@
     @media print {
       header, footer, .card.actions { display: none !important; }
 
-      /* Force white print canvas (removes side background) */
       body { background: #fff !important; }
       .container {
         background: #fff !important;
@@ -251,14 +194,12 @@
         align-items: stretch !important;
       }
 
-      /* Add padding so borders don't get clipped */
       .paper {
         box-shadow: none !important;
         border-radius: 0 !important;
         padding: 0.25in !important;
       }
 
-      /* Remove the screen full-bleed negative margins in print */
       .shop-header {
         margin: 0 0 0.2in 0 !important;
         border-radius: 0 !important;
@@ -280,7 +221,6 @@
   <div class="report-shell">
     <div class="paper">
 
-      <!-- Header -->
       <section class="shop-header">
         <div class="shop-brand">
           <h2>Woods Garage</h2>
@@ -294,7 +234,6 @@
         </div>
       </section>
 
-      <!-- Vehicle Info -->
       <section class="block">
         <p class="block-title">Vehicle Information</p>
         <div class="kv-grid">
@@ -305,7 +244,6 @@
         </div>
       </section>
 
-      <!-- Summary -->
       <section class="block">
         <p class="block-title">Summary</p>
         <div class="summary-grid">
@@ -315,7 +253,6 @@
         </div>
       </section>
 
-      <!-- Maintenance Entries -->
       <section class="entries" id="rows">Loading…</section>
 
       <section class="report-footer">
@@ -324,7 +261,6 @@
 
     </div>
 
-    <!-- Bottom Actions -->
     <div class="card actions" id="bottomActions">
       <button id="printBtn">Print / Save as PDF</button>
       <button id="backBtn">Back to History</button>
@@ -343,27 +279,17 @@
   const vin = new URLSearchParams(window.location.search).get("vin");
 
   function normalizeVin(v) { return String(v ?? "").trim(); }
-
-  function parseDateSafe(v) {
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
+  function parseDateSafe(v) { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
   function formatDateShort(v) {
     const d = parseDateSafe(v);
     if (!d) return "N/A";
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
-
   function parseOdoSafe(v) {
     const n = Number(String(v ?? "").replace(/,/g, "").trim());
     return Number.isFinite(n) ? n : null;
   }
-
-  function fmtNum(n) {
-    return (n === null || n === undefined) ? "—" : Number(n).toLocaleString();
-  }
-
+  function fmtNum(n) { return (n === null || n === undefined) ? "—" : Number(n).toLocaleString(); }
   function makeReportNo(vin) {
     const now = new Date();
     const y = now.getFullYear();
@@ -413,9 +339,7 @@
         return;
       }
 
-      rows.sort((a, b) =>
-        new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
-      );
+      rows.sort((a, b) => new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp));
 
       const lastOdo = parseOdoSafe(rows[0].odometer);
       document.getElementById("totalRecords").textContent = String(rows.length);
@@ -440,7 +364,6 @@
         return `
           <div class="entry">
             <div class="entry-header">${dateText} • ${odoText}</div>
-
             <div class="entry-section first"><strong>Service:</strong> ${bullets(r.service)}</div>
             <div class="entry-section"><strong>Parts:</strong> ${bullets(r.parts)}</div>
             <div class="entry-section"><strong>Notes:</strong> ${bullets(r.notes)}</div>

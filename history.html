@@ -1,25 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Maintenance History</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Maintenance Report</title>
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- Page-local only: center bottom buttons nicely on mobile -->
   <style>
-    #bottomActions {
+    /* Professional report styling is kept scoped to this page only */
+
+    :root {
+      --ink: #111;
+      --muted: #555;
+      --line: #ddd;
+      --paper: #fff;
+    }
+
+    /* Screen layout */
+    .report-shell {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .report-toolbar {
+      width: 100%;
       display: flex;
       justify-content: center;
-      gap: 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    /* Report paper */
+    .paper {
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 1.25rem;
+      width: 100%;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    /* Header */
+    .shop-header {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    @media (min-width: 700px) {
+      .shop-header { grid-template-columns: 1fr 1fr; }
+    }
+
+    .shop-brand h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: var(--ink);
+      letter-spacing: 0.5px;
+    }
+
+    .shop-brand p,
+    .shop-meta p {
+      margin: 0.15rem 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .shop-meta {
+      text-align: left;
+    }
+    @media (min-width: 700px) {
+      .shop-meta { text-align: right; }
+    }
+
+    /* Vehicle info block */
+    .block {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.9rem;
+    }
+
+    .block-title {
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.35rem 1rem;
+    }
+    @media (min-width: 700px) {
+      .kv-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.5rem;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .k {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+    .v {
+      color: var(--ink);
+      font-size: 0.98rem;
+      overflow-wrap: anywhere;
+    }
+
+    /* Summary */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem 1rem;
+    }
+    @media (min-width: 700px) {
+      .summary-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.75rem;
+    }
+    .summary-card .label {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 0.25rem;
+    }
+    .summary-card .value {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    /* Table */
+    .table-wrap {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.65rem 0.65rem;
+      background: #f3f5f8;
+      color: var(--ink);
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+    }
+
+    tbody td {
+      padding: 0.65rem 0.65rem;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+      color: var(--ink);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .nowrap { white-space: nowrap; }
+
+    /* Multi-line bullets for Service + Parts columns */
+    .mlist {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+    .mlist li {
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Footer */
+    .report-footer {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Bottom actions spacing + centering (scoped to this page only) */
+    #bottomActions {
+      margin-top: 1rem;        /* keeps it from touching the paper */
+      margin-left: auto;       /* ensures the card itself centers within report-shell */
+      margin-right: auto;
+      width: 100%;
+      max-width: 900px;        /* matches report-shell max width */
+      display: flex;           /* keeps button layout identical */
+      justify-content: center;
+      gap: 0.75rem;
       flex-wrap: wrap;
     }
 
-    @media (max-width: 600px) {
-      #bottomActions {
-        justify-content: center;
+    /* Print rules */
+    @page {
+      margin: 0.5in;
+    }
+
+    @media print {
+      header, footer, nav, .navbar-bottom, .report-toolbar, .card.actions {
+        display: none !important;
       }
-      #bottomActions button {
-        min-width: 160px;
+
+      body {
+        background: #fff !important;
+      }
+
+      .container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        align-items: stretch !important;
+      }
+
+      .paper {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+      }
+
+      .table-wrap {
+        border-radius: 0 !important;
+      }
+
+      /* Avoid row splitting */
+      tr, td, th {
+        page-break-inside: avoid;
       }
     }
   </style>
@@ -27,23 +261,93 @@
 <body>
 
 <header>
-  <h1>Maintenance History</h1>
+  <h1>Maintenance Report</h1>
 </header>
 
 <main class="container">
+  <div class="report-shell">
 
-  <div id="history-list">
-    <!-- Maintenance records will load here -->
+    <div class="paper" id="paper">
+      <!-- Shop Header -->
+      <section class="shop-header">
+        <div class="shop-brand">
+          <h2>Woods Garage</h2>
+          <p>Service & Maintenance Report</p>
+          <p class="muted">service.woodsgarage.net</p>
+        </div>
+        <div class="shop-meta">
+          <p><strong>Report #:</strong> <span id="reportNo">—</span></p>
+          <p><strong>Generated:</strong> <span id="generatedOn">—</span></p>
+          <p><strong>VIN:</strong> <span id="vinDisplay">—</span></p>
+        </div>
+      </section>
+
+      <!-- Vehicle Info -->
+      <section class="block">
+        <p class="block-title">Vehicle Information</p>
+        <div class="kv-grid">
+          <div class="kv"><div class="k">Vehicle</div><div class="v" id="vehicleName">—</div></div>
+          <div class="kv"><div class="k">Year</div><div class="v" id="vehicleYear">—</div></div>
+          <div class="kv"><div class="k">Make</div><div class="v" id="vehicleMake">—</div></div>
+          <div class="kv"><div class="k">Model</div><div class="v" id="vehicleModel">—</div></div>
+        </div>
+      </section>
+
+      <!-- Summary -->
+      <section class="block">
+        <p class="block-title">Summary</p>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="label">Total Records</div>
+            <div class="value" id="totalRecords">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Last Mileage</div>
+            <div class="value" id="lastMileage">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Date Range</div>
+            <div class="value" id="dateRange">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Table -->
+      <section class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="nowrap">Date Performed</th>
+              <th class="nowrap">Odometer</th>
+              <th>Service</th>
+              <th>Parts</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr>
+              <td colspan="5" class="muted">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Footer note -->
+      <section class="report-footer">
+        <div><strong>Disclaimer:</strong> This report is generated from recorded maintenance entries and may contain customer-supplied notes.</div>
+        <div class="muted">© 2026 Woods Garage </div>
+      </section>
+    </div>
+
+    <!-- Bottom Actions Card (moved below report preview) -->
+    <div class="card actions report-toolbar" id="bottomActions">
+      <button id="printBtn">Print / Save as PDF</button>
+      <button id="backBtn">Back to History</button>
+      <button id="vehicleBtn">Vehicle Dashboard</button>
+      <button id="homeBtn">Home</button>
+    </div>
+
   </div>
-
-  <!-- Bottom Actions Card -->
-  <div class="card actions" id="bottomActions">
-    <button type="button" onclick="window.location.href='index.html'">
-      Home
-    </button>
-    <button id="printReportBtn">Print Report</button>
-  </div>
-
 </main>
 
 <footer>
@@ -52,98 +356,174 @@
 
 <script src="app.js"></script>
 <script>
-const vin = new URLSearchParams(window.location.search).get("vin");
+  const params = new URLSearchParams(window.location.search);
+  const vin = params.get("vin");
 
-// Populate maintenance history (with Edit support)
-async function fetchMaintenance(vin, containerId) {
-  try {
-    const response = await fetch(`${API_URL}?sheet=Maintenance`);
-    const records = await response.json();
+  function normalizeVin(v) {
+    return String(v ?? "").trim();
+  }
 
-    const vehicleRecords = (Array.isArray(records) ? records : [])
-      .filter(r => (r.vin || r.VIN || "").toString().trim() === (vin || "").trim())
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  function parseDateSafe(v) {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
 
-    const container = document.getElementById(containerId);
-    const printBtn = document.getElementById("printReportBtn");
+  function formatDateShort(v) {
+    const d = parseDateSafe(v);
+    if (!d) return "N/A";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
 
-    if (!vehicleRecords || vehicleRecords.length === 0) {
-      container.innerHTML = "<p>No maintenance records found.</p>";
-      if (printBtn) printBtn.style.display = "none";
+  function parseOdoSafe(v) {
+    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function fmtNum(n) {
+    return (n === null || n === undefined) ? "—" : Number(n).toLocaleString();
+  }
+
+  function makeReportNo(vin) {
+    // simple deterministic-ish report number for display
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const tail = (vin || "").slice(-6).toUpperCase();
+    return `WG-${y}${m}${d}-${tail || "REPORT"}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function textAsBullets(text) {
+    const raw = String(text ?? "").trim();
+    if (!raw) return "—";
+
+    const lines = raw
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    if (lines.length <= 1) return escapeHtml(raw);
+
+    return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
+  }
+
+  async function loadReport() {
+    if (!vin) {
+      alert("VIN not found. Cannot generate report.");
+      document.getElementById("rows").innerHTML =
+        `<tr><td colspan="5" class="muted">VIN missing.</td></tr>`;
       return;
     }
 
-    if (printBtn) printBtn.style.display = "";
+    // header fields
+    document.getElementById("vinDisplay").textContent = vin;
+    document.getElementById("generatedOn").textContent = new Date().toLocaleString();
+    document.getElementById("reportNo").textContent = makeReportNo(vin);
 
-    container.innerHTML = vehicleRecords.map(r => {
-      const date = r.timestamp ? new Date(r.timestamp) : null;
-      const dateStr = date
-        ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        : "N/A";
+    try {
+      const [vehResp, maintResp] = await Promise.all([
+        fetch(`${API_URL}?sheet=Vehicles`),
+        fetch(`${API_URL}?sheet=Maintenance`)
+      ]);
 
-      const recordId = (r.record_id || "").toString().trim();
-      const canEdit = Boolean(recordId);
+      const vehicles = await vehResp.json();
+      const maintenance = await maintResp.json();
 
-      return `
-        <div class="card">
-          <p><strong>Date:</strong> ${dateStr}</p>
-          <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
-          <p><strong>Service:</strong>
-            <span style="white-space:pre-line;">${r.service || "N/A"}</span>
-          </p>
-          <p><strong>Parts:</strong>
-            <span style="white-space:pre-line;">${r.parts || "N/A"}</span>
-          </p>
-          <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+      const v = (Array.isArray(vehicles) ? vehicles : []).find(r =>
+        normalizeVin(r.vin || r.VIN) === normalizeVin(vin)
+      );
 
-          ${canEdit ? `
-            <div class="actions">
-              <button type="button"
-                onclick="editRecord('${encodeURIComponent(vin || '')}','${encodeURIComponent(recordId)}')">
-                Edit
-              </button>
-            </div>
-          ` : `
-            <p style="font-size:0.9rem;color:#666;margin-top:1rem;">
-              Edit unavailable for this record (missing record_id).
-            </p>
-          `}
-        </div>
-      `;
-    }).join("");
+      if (v) {
+        document.getElementById("vehicleName").textContent = v.name || "—";
+        document.getElementById("vehicleYear").textContent = v.year || "—";
+        document.getElementById("vehicleMake").textContent = v.make || "—";
+        document.getElementById("vehicleModel").textContent = v.model || "—";
+      } else {
+        document.getElementById("vehicleName").textContent = "—";
+        document.getElementById("vehicleYear").textContent = "—";
+        document.getElementById("vehicleMake").textContent = "—";
+        document.getElementById("vehicleModel").textContent = "—";
+      }
 
-  } catch (err) {
-    console.error("Error fetching maintenance history:", err);
-    document.getElementById(containerId).innerHTML =
-      "<p>Unable to load maintenance history.</p>";
-    const printBtn = document.getElementById("printReportBtn");
-    if (printBtn) printBtn.style.display = "none";
-  }
-}
+      const rows = (Array.isArray(maintenance) ? maintenance : [])
+        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
 
-// Navigate to edit page
-function editRecord(vinEncoded, idEncoded) {
-  window.location.href = `edit-maintenance.html?vin=${vinEncoded}&id=${idEncoded}`;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (!vin) {
-    alert("Vehicle VIN not found. Maintenance history may not load correctly.");
-  }
-
-  const printBtn = document.getElementById("printReportBtn");
-  if (printBtn) {
-    printBtn.addEventListener("click", () => {
-      if (!vin) {
-        alert("Vehicle VIN not found. Cannot generate report.");
+      if (!rows.length) {
+        document.getElementById("totalRecords").textContent = "0";
+        document.getElementById("lastMileage").textContent = "—";
+        document.getElementById("dateRange").textContent = "—";
+        document.getElementById("rows").innerHTML =
+          `<tr><td colspan="5" class="muted">No maintenance records found for this VIN.</td></tr>`;
         return;
       }
-      window.location.href = `report.html?vin=${encodeURIComponent(vin)}`;
-    });
+
+      // sort newest first for table display (prefer date_performed, fallback to timestamp)
+      rows.sort((a, b) => new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp));
+
+      // summary: last mileage is newest record odometer (if parseable)
+      const lastOdo = parseOdoSafe(rows[0].odometer);
+
+      // summary: date range (oldest to newest) using date_performed fallback timestamp
+      const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
+      const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
+      const rangeText = (oldestDate && newestDate)
+        ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
+        : "—";
+
+      document.getElementById("totalRecords").textContent = String(rows.length);
+      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : "—";
+      document.getElementById("dateRange").textContent = rangeText;
+
+      // render table
+      const tbody = rows.map(r => {
+        const date = formatDateShort(r.date_performed || r.timestamp);
+        const odo = parseOdoSafe(r.odometer);
+        const service = textAsBullets(r.service);
+        const parts = textAsBullets(r.parts);
+        const notes = (r.notes || "—");
+
+        return `
+          <tr>
+            <td class="nowrap">${date}</td>
+            <td class="nowrap">${odo !== null ? fmtNum(odo) : (r.odometer || "—")}</td>
+            <td>${service}</td>
+            <td>${parts}</td>
+            <td>${notes}</td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("rows").innerHTML = tbody;
+
+    } catch (err) {
+      console.error("Report load failed:", err);
+      document.getElementById("rows").innerHTML =
+        `<tr><td colspan="5" class="muted">Unable to load report data.</td></tr>`;
+    }
   }
 
-  fetchMaintenance(vin, "history-list");
-});
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+  document.getElementById("backBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "history.html";
+    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("vehicleBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "index.html";
+    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("homeBtn").addEventListener("click", () => location.href = "index.html");
+
+  document.addEventListener("DOMContentLoaded", loadReport);
 </script>
+
 </body>
 </html>

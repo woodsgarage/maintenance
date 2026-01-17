@@ -22,6 +22,16 @@
         min-width: 160px;
       }
     }
+
+    /* Bulleted lists for Service / Parts */
+    .mlist {
+      margin: 0.25rem 0 0 0;
+      padding-left: 1.1rem;
+    }
+    .mlist li {
+      margin: 0;
+      padding: 0;
+    }
   </style>
 </head>
 <body>
@@ -53,6 +63,31 @@
 <script src="app.js"></script>
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function textAsBullets(text) {
+  const raw = String(text ?? "").trim();
+  if (!raw) return "N/A";
+
+  const lines = raw
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  if (lines.length <= 1) {
+    return escapeHtml(raw);
+  }
+
+  return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
+}
 
 // Populate maintenance history (with Edit support)
 async function fetchMaintenance(vin, containerId) {
@@ -96,13 +131,9 @@ async function fetchMaintenance(vin, containerId) {
         <div class="card">
           <p><strong>Date Performed:</strong> ${dateStr}</p>
           <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
-          <p><strong>Service:</strong>
-            <span style="white-space:pre-line;">${r.service || "N/A"}</span>
-          </p>
-          <p><strong>Parts:</strong>
-            <span style="white-space:pre-line;">${r.parts || "N/A"}</span>
-          </p>
-          <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+          <p><strong>Service:</strong> ${textAsBullets(r.service)}</p>
+          <p><strong>Parts:</strong> ${textAsBullets(r.parts)}</p>
+          <p><strong>Notes:</strong> ${escapeHtml(r.notes || "N/A")}</p>
 
           ${canEdit ? `
             <div class="actions">

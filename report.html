@@ -8,11 +8,14 @@
   <style>
     /* Professional report styling is kept scoped to this page only */
 
+    /* ---------- Variant B: Premium Branded (scoped) ---------- */
     :root {
-      --ink: #111;
-      --muted: #555;
-      --line: #ddd;
+      --ink: #0f172a;     /* slate-900 */
+      --muted: #475569;   /* slate-600 */
+      --line: #e2e8f0;    /* slate-200 */
       --paper: #fff;
+      --accent: #1f6feb;  /* Woods Garage blue */
+      --accent-soft: #eef5ff;
     }
 
     /* Screen layout */
@@ -38,6 +41,9 @@
       padding: 1.25rem;
       width: 100%;
       box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
     }
 
     /* Header */
@@ -46,7 +52,7 @@
       grid-template-columns: 1fr;
       gap: 0.75rem;
       padding-bottom: 0.75rem;
-      border-bottom: 2px solid var(--ink);
+      border-bottom: 3px solid var(--accent);
     }
 
     @media (min-width: 700px) {
@@ -57,7 +63,7 @@
       margin: 0;
       font-size: 1.4rem;
       color: var(--ink);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.75px;
     }
 
     .shop-brand p,
@@ -84,7 +90,7 @@
 
     .block-title {
       font-weight: 700;
-      color: var(--ink);
+      color: var(--accent);
       margin: 0 0 0.5rem 0;
       font-size: 1rem;
     }
@@ -132,6 +138,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.75rem;
+      background: var(--accent-soft);
     }
     .summary-card .label {
       color: var(--muted);
@@ -142,7 +149,7 @@
       margin-bottom: 0.25rem;
     }
     .summary-card .value {
-      color: var(--ink);
+      color: var(--accent);
       font-weight: 800;
       font-size: 1.05rem;
     }
@@ -164,7 +171,7 @@
     thead th {
       text-align: left;
       padding: 0.65rem 0.65rem;
-      background: #f3f5f8;
+      background: #f7f9fc;
       color: var(--ink);
       border-bottom: 1px solid var(--line);
       font-weight: 800;
@@ -175,10 +182,16 @@
       border-bottom: 1px solid #eee;
       vertical-align: top;
       color: var(--ink);
+      line-height: 1.35;
     }
 
     tbody tr:last-child td {
       border-bottom: none;
+    }
+
+    /* Zebra striping */
+    tbody tr:nth-child(even) td {
+      background: #fbfdff;
     }
 
     .muted {
@@ -187,14 +200,17 @@
 
     .nowrap { white-space: nowrap; }
 
-    /* Multi-line bullets */
+    /* Multi-line bullets (Service / Parts / Notes) */
     .mlist {
-      margin: 0;
-      padding-left: 1.1rem;
+      margin: 0.1rem 0 0 0;
+      padding-left: 1rem;
     }
     .mlist li {
-      margin: 0;
+      margin: 0 0 0.15rem 0;
       padding: 0;
+    }
+    .mlist li::marker {
+      color: #94a3b8; /* slate-400 */
     }
 
     /* Footer */
@@ -251,8 +267,19 @@
         border-radius: 0 !important;
       }
 
+      /* Repeat table headers across printed pages */
+      thead {
+        display: table-header-group;
+      }
+
+      /* Avoid row splitting */
       tr, td, th {
         page-break-inside: avoid;
+      }
+
+      /* Keeps premium look but reduces ink coverage */
+      tbody tr:nth-child(even) td {
+        background: #f8fafc;
       }
     }
   </style>
@@ -338,7 +365,7 @@
       </section>
     </div>
 
-    <!-- Bottom Actions Card -->
+    <!-- Bottom Actions Card (moved below report preview) -->
     <div class="card actions report-toolbar" id="bottomActions">
       <button id="printBtn">Print / Save as PDF</button>
       <button id="backBtn">Back to History</button>
@@ -358,9 +385,18 @@
   const params = new URLSearchParams(window.location.search);
   const vin = params.get("vin");
 
-  function formatDateShort(v) {
+  function normalizeVin(v) {
+    return String(v ?? "").trim();
+  }
+
+  function parseDateSafe(v) {
     const d = new Date(v);
-    if (isNaN(d)) return "N/A";
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDateShort(v) {
+    const d = parseDateSafe(v);
+    if (!d) return "N/A";
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
 
@@ -374,6 +410,7 @@
   }
 
   function makeReportNo(vin) {
+    // simple deterministic-ish report number for display
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -384,11 +421,13 @@
 
   async function loadReport() {
     if (!vin) {
+      alert("VIN not found. Cannot generate report.");
       document.getElementById("rows").innerHTML =
         `<tr><td colspan="5" class="muted">VIN missing.</td></tr>`;
       return;
     }
 
+    // header fields
     document.getElementById("vinDisplay").textContent = vin;
     document.getElementById("generatedOn").textContent = new Date().toLocaleString();
     document.getElementById("reportNo").textContent = makeReportNo(vin);
@@ -403,7 +442,7 @@
       const maintenance = await maintResp.json();
 
       const v = (Array.isArray(vehicles) ? vehicles : []).find(r =>
-        String(r.vin || r.VIN).trim() === String(vin).trim()
+        normalizeVin(r.vin || r.VIN) === normalizeVin(vin)
       );
 
       if (v) {
@@ -411,37 +450,49 @@
         document.getElementById("vehicleYear").textContent = v.year || "—";
         document.getElementById("vehicleMake").textContent = v.make || "—";
         document.getElementById("vehicleModel").textContent = v.model || "—";
+      } else {
+        document.getElementById("vehicleName").textContent = "—";
+        document.getElementById("vehicleYear").textContent = "—";
+        document.getElementById("vehicleMake").textContent = "—";
+        document.getElementById("vehicleModel").textContent = "—";
       }
 
       const rows = (Array.isArray(maintenance) ? maintenance : [])
-        .filter(r => String(r.vin || r.VIN).trim() === String(vin).trim());
+        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
 
       if (!rows.length) {
+        document.getElementById("totalRecords").textContent = "0";
+        document.getElementById("lastMileage").textContent = "—";
+        document.getElementById("dateRange").textContent = "—";
         document.getElementById("rows").innerHTML =
-          `<tr><td colspan="5" class="muted">No maintenance records found.</td></tr>`;
+          `<tr><td colspan="5" class="muted">No maintenance records found for this VIN.</td></tr>`;
         return;
       }
 
+      // sort newest first for table display (prefer date_performed, fallback to timestamp)
       rows.sort((a, b) =>
-        new Date(b.date_performed || b.timestamp) -
-        new Date(a.date_performed || a.timestamp)
+        new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
       );
 
-      document.getElementById("totalRecords").textContent = rows.length;
-
+      // summary: last mileage is newest record odometer (if parseable)
       const lastOdo = parseOdoSafe(rows[0].odometer);
-      document.getElementById("lastMileage").textContent =
-        lastOdo !== null ? fmtNum(lastOdo) : "—";
 
-      const oldest = new Date(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
-      const newest = new Date(rows[0].date_performed || rows[0].timestamp);
-      document.getElementById("dateRange").textContent =
-        `${oldest.toLocaleDateString()} – ${newest.toLocaleDateString()}`;
+      // summary: date range (oldest to newest) using date_performed fallback timestamp
+      const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
+      const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
+      const rangeText = (oldestDate && newestDate)
+        ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
+        : "—";
+
+      document.getElementById("totalRecords").textContent = String(rows.length);
+      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : "—";
+      document.getElementById("dateRange").textContent = rangeText;
 
       const bullets = (window.WG && window.WG.renderMultilineBullets)
         ? window.WG.renderMultilineBullets
         : (t => (t ? String(t) : "—"));
 
+      // render table
       const tbody = rows.map(r => {
         const date = formatDateShort(r.date_performed || r.timestamp);
         const odo = parseOdoSafe(r.odometer);
@@ -466,12 +517,16 @@
     }
   }
 
-  document.getElementById("printBtn").onclick = () => window.print();
-  document.getElementById("backBtn").onclick = () =>
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+  document.getElementById("backBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "history.html";
     location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("vehicleBtn").onclick = () =>
+  });
+  document.getElementById("vehicleBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "index.html";
     location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("homeBtn").onclick = () => location.href = "index.html";
+  });
+  document.getElementById("homeBtn").addEventListener("click", () => location.href = "index.html");
 
   document.addEventListener("DOMContentLoaded", loadReport);
 </script>

@@ -116,16 +116,16 @@
         </div>
 
         <!-- Parts -->
-<div class="full">
-  <label for="parts"><strong>Parts</strong></label>
-  <textarea
-    id="parts"
-    name="parts"
-    rows="3"
-    maxlength="200"
-    placeholder="Press Enter to add each part on a new line"
-  ></textarea>
-</div>
+        <div class="full">
+          <label for="parts"><strong>Parts</strong></label>
+          <textarea
+            id="parts"
+            name="parts"
+            rows="3"
+            maxlength="200"
+            placeholder="Press Enter to add each part on a new line"
+          ></textarea>
+        </div>
 
         <!-- Notes -->
         <div class="full">
@@ -189,8 +189,6 @@
   const saveBtn = document.getElementById("saveBtn");
   const cancelBtn = document.getElementById("cancelBtn");
 
-  let lastRecordedOdo = null;
-
   if (!vin || !recordId) {
     alert("Missing VIN or record ID. Cannot edit maintenance.");
   } else {
@@ -198,7 +196,7 @@
     recordIdField.value = recordId;
   }
 
-  // Uses API_URL from app.js; keep consistent with the rest of the site
+  // Use API_URL from app.js
   form.action = API_URL;
 
   function parseDateSafe(v) {
@@ -246,70 +244,48 @@
     try {
       const resp = await fetch(`${API_URL}?sheet=Maintenance`);
       const records = await resp.json();
-
       const all = Array.isArray(records) ? records : [];
 
-      // Find the record by record_id
-      const target = all.find(r => String(r.record_id || "").trim() === String(recordId).trim());
+      const target = all.find(r =>
+        String(r.record_id || "").trim() === String(recordId).trim()
+      );
+
       if (!target) {
         document.querySelector(".card").innerHTML = "<p>Record not found.</p>";
         return;
       }
 
-      // Prefill form
       odometerInput.value = target.odometer ?? "";
       datePerformedInput.value = toDateInputValue(target.date_performed) || "";
       serviceInput.value = target.service ?? "";
       partsInput.value = target.parts ?? "";
       notesInput.value = target.notes ?? "";
 
-      // Compute last recorded odometer for this VIN (latest timestamp)
-      const vinMatches = all.filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
-      let latest = null;
+      odometerHint.textContent =
+        "Editing historical record — odometer may be lower than newer entries.";
 
-      for (const r of vinMatches) {
-        const dt = parseDateSafe(r.timestamp);
-        if (!dt) continue;
-        if (!latest || dt > latest.dt) latest = { r, dt };
-      }
-
-      const last = latest ? latest.r : (vinMatches.length ? vinMatches[vinMatches.length - 1] : null);
-      const lastOdo = last ? parseOdoSafe(last.odometer) : null;
-
-      lastRecordedOdo = lastOdo;
-
-      if (lastRecordedOdo !== null) {
-        odometerHint.textContent = `Last recorded mileage for this VIN: ${lastRecordedOdo.toLocaleString()}`;
-      } else {
-        odometerHint.textContent = "No prior mileage context found.";
-      }
     } catch (err) {
       console.error("Failed to load record:", err);
       document.querySelector(".card").innerHTML = "<p>Unable to load record.</p>";
     }
   }
 
-  // Enforce: Odometer must NOT be less than previous (as requested)
+  // ✅ Corrected validation for EDIT:
+  // Only ensure odometer is a valid non-negative number.
   function validateOdometer() {
     showOdoError("");
 
     const entered = parseOdoSafe(odometerInput.value);
-    if (entered === null) return false;
-
-    if (lastRecordedOdo !== null && entered < lastRecordedOdo) {
-      showOdoError(`Odometer cannot be less than the previous value (${lastRecordedOdo.toLocaleString()}).`);
+    if (entered === null || entered < 0) {
+      showOdoError("Odometer must be a non-negative number.");
       return false;
     }
     return true;
   }
 
-  odometerInput.addEventListener("input", () => {
-    // Live validate but don't be annoying if they haven't loaded context
-    if (lastRecordedOdo !== null) validateOdometer();
-  });
+  odometerInput.addEventListener("input", validateOdometer);
 
   form.addEventListener("submit", (e) => {
-    // Block submit if invalid
     if (!validateOdometer()) {
       e.preventDefault();
       return;
@@ -328,8 +304,6 @@
 
   iframe.onload = () => {
     if (form.dataset.submitted !== "true") return;
-
-    // On successful save, return to history for this VIN
     window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
   };
 
@@ -338,9 +312,12 @@
   });
 
   document.getElementById("homeBtn").onclick = () => location.href = "index.html";
-  document.getElementById("vehicleBtn").onclick = () => location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("historyBtn").onclick = () => location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("scheduleBtn").onclick = () => location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("vehicleBtn").onclick = () =>
+    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("historyBtn").onclick = () =>
+    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  document.getElementById("scheduleBtn").onclick = () =>
+    location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
 
   document.addEventListener("DOMContentLoaded", loadRecordAndContext);
 </script>

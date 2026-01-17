@@ -64,31 +64,6 @@
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function textAsBullets(text) {
-  const raw = String(text ?? "").trim();
-  if (!raw) return "N/A";
-
-  const lines = raw
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  if (lines.length <= 1) {
-    return escapeHtml(raw);
-  }
-
-  return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
-}
-
 // Populate maintenance history (with Edit support)
 async function fetchMaintenance(vin, containerId) {
   try {
@@ -113,6 +88,14 @@ async function fetchMaintenance(vin, containerId) {
 
     if (printBtn) printBtn.style.display = "";
 
+    const bullets = (window.WG && window.WG.renderMultilineBullets)
+      ? window.WG.renderMultilineBullets
+      : (t => (t ? String(t) : "N/A"));
+
+    const esc = (window.WG && window.WG.escapeHtml)
+      ? window.WG.escapeHtml
+      : (t => String(t ?? ""));
+
     container.innerHTML = vehicleRecords.map(r => {
       const rawDate = r.date_performed || r.timestamp;
       const date = rawDate ? new Date(rawDate) : null;
@@ -131,9 +114,9 @@ async function fetchMaintenance(vin, containerId) {
         <div class="card">
           <p><strong>Date Performed:</strong> ${dateStr}</p>
           <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
-          <p><strong>Service:</strong> ${textAsBullets(r.service)}</p>
-          <p><strong>Parts:</strong> ${textAsBullets(r.parts)}</p>
-          <p><strong>Notes:</strong> ${escapeHtml(r.notes || "N/A")}</p>
+          <p><strong>Service:</strong> ${bullets(r.service)}</p>
+          <p><strong>Parts:</strong> ${bullets(r.parts)}</p>
+          <p><strong>Notes:</strong> ${esc(r.notes || "N/A")}</p>
 
           ${canEdit ? `
             <div class="actions">

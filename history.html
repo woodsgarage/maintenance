@@ -51,6 +51,12 @@
     <button type="button" onclick="window.location.href='index.html'">
       Home
     </button>
+
+    <!-- NEW: Add Maintenance -->
+    <button type="button" id="addMaintenanceBtn">
+      Add Maintenance
+    </button>
+
     <button id="printReportBtn">Print Report</button>
   </div>
 
@@ -121,51 +127,4 @@ async function fetchMaintenance(vin, containerId) {
           ${canEdit ? `
             <div class="actions">
               <button type="button"
-                onclick="editRecord('${encodeURIComponent(vin || '')}','${encodeURIComponent(recordId)}')">
-                Edit
-              </button>
-            </div>
-          ` : `
-            <p style="font-size:0.9rem;color:#666;margin-top:1rem;">
-              Edit unavailable for this record (missing record_id).
-            </p>
-          `}
-        </div>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error("Error fetching maintenance history:", err);
-    document.getElementById(containerId).innerHTML =
-      "<p>Unable to load maintenance history.</p>";
-    const printBtn = document.getElementById("printReportBtn");
-    if (printBtn) printBtn.style.display = "none";
-  }
-}
-
-// Navigate to edit page
-function editRecord(vinEncoded, idEncoded) {
-  window.location.href = `edit-maintenance.html?vin=${vinEncoded}&id=${idEncoded}`;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (!vin) {
-    alert("Vehicle VIN not found. Maintenance history may not load correctly.");
-  }
-
-  const printBtn = document.getElementById("printReportBtn");
-  if (printBtn) {
-    printBtn.addEventListener("click", () => {
-      if (!vin) {
-        alert("Vehicle VIN not found. Cannot generate report.");
-        return;
-      }
-      window.location.href = `report.html?vin=${encodeURIComponent(vin)}`;
-    });
-  }
-
-  fetchMaintenance(vin, "history-list");
-});
-</script>
-</body>
-</html>
+                onclick="editRecord('${enco

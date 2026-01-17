@@ -18,6 +18,45 @@ function parseOdoSafe(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/* -----------------------------
+   Shared HTML safety + multiline bullet renderer
+   (Used by history.html + report.html for Service/Parts)
+------------------------------ */
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Render multi-line text as bullets using <ul class="mlist"><li>...</li></ul>.
+ * - Blank => "—"
+ * - Single line => escaped text
+ * - Multi-line => bullets (each line escaped)
+ * Returns HTML safe to assign to innerHTML.
+ */
+function renderMultilineBullets(text) {
+  const raw = String(text ?? "").trim();
+  if (!raw) return "—";
+
+  const lines = raw
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  if (lines.length <= 1) return escapeHtml(raw);
+
+  return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
+}
+
+// Optional: expose for pages that run in module-like scopes (safe no-op otherwise)
+window.WG = window.WG || {};
+window.WG.escapeHtml = escapeHtml;
+window.WG.renderMultilineBullets = renderMultilineBullets;
+
 function buildLastOdoMap(maintenanceRows) {
   // vin -> { odo, dt }
   const map = new Map();
@@ -246,9 +285,3 @@ async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("vehicle-list")) fetchVehicles();
 });
-
-
-
-
-
-

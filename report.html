@@ -14,13 +14,13 @@
       --line: #e2e8f0;
       --paper: #ffffff;
 
-      /* Brand tone (Woods Garage blue) */
+      /* Brand tone */
       --accent: #1f6feb;
 
-      /* Tuned: slightly stronger than before, still print-friendly */
+      /* Tuned: a bit stronger, still print-friendly */
       --accent-soft: #e6efff;
 
-      /* Page header background (slightly lighter than entry header for hierarchy) */
+      /* Header background */
       --header-bg: #eef5ff;
     }
 
@@ -46,7 +46,10 @@
       grid-template-columns: 1fr;
       gap: 0.75rem;
       padding: 1rem;
+
+      /* Full-bleed look on screen (safe because paper has padding) */
       margin: -1.25rem -1.25rem 1rem -1.25rem;
+
       background: var(--header-bg);
       border-bottom: 3px solid var(--accent);
       border-radius: 16px 16px 0 0;
@@ -72,14 +75,8 @@
       font-size: 0.95rem;
     }
 
-    .shop-meta {
-      text-align: left;
-    }
-    @media (min-width: 700px) {
-      .shop-meta {
-        text-align: right;
-      }
-    }
+    .shop-meta { text-align: left; }
+    @media (min-width: 700px) { .shop-meta { text-align: right; } }
 
     /* ---------- Blocks ---------- */
     .block {
@@ -87,6 +84,9 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.9rem;
+      background: #fff;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
     .block-title {
@@ -101,11 +101,8 @@
       grid-template-columns: 1fr;
       gap: 0.4rem 1rem;
     }
-
     @media (min-width: 700px) {
-      .kv-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+      .kv-grid { grid-template-columns: 1fr 1fr; }
     }
 
     .kv {
@@ -127,18 +124,15 @@
       grid-template-columns: 1fr;
       gap: 0.5rem 1rem;
     }
-
     @media (min-width: 700px) {
-      .summary-grid {
-        grid-template-columns: 1fr 1fr 1fr;
-      }
+      .summary-grid { grid-template-columns: 1fr 1fr 1fr; }
     }
 
     .summary-card {
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.75rem;
-      background: #f3f7ff; /* slightly lighter than entry header band */
+      background: #f3f7ff; /* a touch lighter than entry header band */
     }
 
     .summary-card .label {
@@ -170,9 +164,11 @@
       background: #fff;
       break-inside: avoid;
       page-break-inside: avoid;
+
+      /* Helps prevent orphaned headers by encouraging earlier breaks */
+      min-height: 5.6rem;
     }
 
-    /* Strong separation + color band on each card header */
     .entry-header {
       background: var(--accent-soft);
       padding: 0.55rem 0.75rem;
@@ -182,19 +178,7 @@
       font-weight: 900;
       color: var(--ink);
       letter-spacing: 0.2px;
-    }
 
-    /* Page-aware spacing:
-       Ensure an entry has enough vertical space to include header + at least one content line
-       so headers don’t orphan at a page break. */
-    .entry {
-      /* conservative minimum; helps print engines decide earlier breaks */
-      min-height: 5.6rem;
-    }
-
-    /* Keep header and first section glued together */
-    .entry-header,
-    .entry-section.first {
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -202,9 +186,9 @@
     .entry-section {
       margin-top: 0.45rem;
     }
-
-    .entry-section strong {
-      color: var(--ink);
+    .entry-section.first {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
     /* Bullets */
@@ -212,14 +196,8 @@
       margin: 0.15rem 0 0 1rem;
       padding: 0;
     }
-
-    .mlist li {
-      margin: 0 0 0.15rem 0;
-    }
-
-    .mlist li::marker {
-      color: #94a3b8;
-    }
+    .mlist li { margin: 0 0 0.15rem 0; }
+    .mlist li::marker { color: #94a3b8; }
 
     /* Footer */
     .report-footer {
@@ -238,31 +216,40 @@
     }
 
     /* Print rules */
-    @page {
-      margin: 0.5in;
-    }
+    @page { margin: 0.5in; }
 
     @media print {
-      header, footer, .card.actions {
-        display: none !important;
+      /* Remove all non-report UI */
+      header, footer, .card.actions { display: none !important; }
+
+      /* FIX 1: Force white page canvas in the PDF */
+      body { background: #fff !important; }
+      .container {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        align-items: stretch !important;
       }
 
+      /* FIX 2: Give the report some inner padding so borders don't get clipped */
       .paper {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0.25in !important;
       }
 
-      /* Reduce ink while keeping separation */
+      /* FIX 3: Remove the screen "full-bleed" negative margins in print */
       .shop-header {
-        background: #f6f9ff !important;
+        margin: 0 0 0.2in 0 !important;
+        border-radius: 0 !important;
+        background: #f6f9ff !important; /* still colored, low-ink */
       }
-      .entry-header {
-        background: #eef4ff !important;
-      }
-      .summary-card {
-        background: #f7f9fd !important;
-      }
+
+      /* Keep the entry header band but lighten for ink */
+      .entry-header { background: #eef4ff !important; }
+
+      .summary-card { background: #f7f9fd !important; }
     }
   </style>
 </head>
@@ -312,9 +299,7 @@
       </section>
 
       <!-- Maintenance Entries -->
-      <section class="entries" id="rows">
-        Loading…
-      </section>
+      <section class="entries" id="rows">Loading…</section>
 
       <section class="report-footer">
         <strong>Disclaimer:</strong> This report is generated from recorded maintenance entries and may contain customer-supplied notes.
@@ -339,9 +324,7 @@
 <script>
   const vin = new URLSearchParams(window.location.search).get("vin");
 
-  function normalizeVin(v) {
-    return String(v ?? "").trim();
-  }
+  function normalizeVin(v) { return String(v ?? "").trim(); }
 
   function parseDateSafe(v) {
     const d = new Date(v);
@@ -412,15 +395,14 @@
         return;
       }
 
-      // Newest first (prefer date_performed, fallback to timestamp)
       rows.sort((a, b) =>
         new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
       );
 
-      // Summary
       const lastOdo = parseOdoSafe(rows[0].odometer);
       document.getElementById("totalRecords").textContent = String(rows.length);
-      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : (rows[0].odometer || "—");
+      document.getElementById("lastMileage").textContent =
+        (lastOdo !== null) ? fmtNum(lastOdo) : (rows[0].odometer || "—");
 
       const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
       const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);

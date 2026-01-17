@@ -19,8 +19,7 @@ function parseOdoSafe(v) {
 }
 
 /* -----------------------------
-   Shared HTML safety + multiline bullet renderer
-   (Used by history.html + report.html for Service/Parts)
+   Shared helpers for bullet behavior across pages
 ------------------------------ */
 function escapeHtml(s) {
   return String(s ?? "")
@@ -32,15 +31,16 @@ function escapeHtml(s) {
 }
 
 /**
- * Render multi-line text as bullets using <ul class="mlist"><li>...</li></ul>.
- * - Blank => "—"
- * - Single line => escaped text
- * - Multi-line => bullets (each line escaped)
- * Returns HTML safe to assign to innerHTML.
+ * Normalized multi-line renderer:
+ * - blank => "N/A"
+ * - single-line => escaped text
+ * - multi-line => <ul class="mlist"><li>...</li></ul> (escaped per line)
+ *
+ * Returns HTML safe to assign into innerHTML.
  */
 function renderMultilineBullets(text) {
   const raw = String(text ?? "").trim();
-  if (!raw) return "—";
+  if (!raw) return "N/A";
 
   const lines = raw
     .split(/\r?\n/)
@@ -52,7 +52,7 @@ function renderMultilineBullets(text) {
   return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
 }
 
-// Optional: expose for pages that run in module-like scopes (safe no-op otherwise)
+// Export (non-breaking) so pages can use shared helpers without redefining them
 window.WG = window.WG || {};
 window.WG.escapeHtml = escapeHtml;
 window.WG.renderMultilineBullets = renderMultilineBullets;

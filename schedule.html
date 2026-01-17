@@ -62,6 +62,7 @@
 <!-- Hidden iframe for form submission -->
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
+<script src="app.js"></script>
 <script>
 const vin = new URLSearchParams(window.location.search).get("vin");
 
@@ -74,6 +75,9 @@ if (!vin) {
 
 const form = document.getElementById("scheduleForm");
 const iframe = document.getElementsByName("hidden_iframe")[0];
+
+// Use API_URL from app.js (single source of truth)
+form.action = API_URL;
 
 // Redirect after form submission
 iframe.onload = function() {
@@ -90,21 +94,18 @@ form.addEventListener("submit", function(event) {
   form.dataset.submitted = "true";
 });
 
-// Replace with your deployed Apps Script Web App URL
-form.action = "https://script.google.com/macros/s/AKfycbyeNNBAnSdUm07YsJkUjfzbztn8pEnEBZ9cJJZo2HbVOlmEySYKnHPYKeGe-1i9bPE4iw/exec";
-
 // Populate email dropdown from Contacts sheet
 async function loadEmails() {
   try {
-    const response = await fetch(`${form.action}?sheet=Contacts`);
+    const response = await fetch(`${API_URL}?sheet=Contacts`);
     const contacts = await response.json();
     const emailSelect = document.getElementById("assignedEmail");
 
-    contacts.forEach(c => {
+    (Array.isArray(contacts) ? contacts : []).forEach(c => {
       if (c.email) {
         const option = document.createElement("option");
         option.value = c.email;
-        option.textContent = `${c.name} (${c.email})`;
+        option.textContent = `${c.name || c.email} (${c.email})`;
         emailSelect.appendChild(option);
       }
     });

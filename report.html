@@ -8,7 +8,7 @@
   <style>
     /* Professional report styling is kept scoped to this page only */
 
-    /* ---------- Variant B: Premium Branded (scoped) ---------- */
+    /* ---------- Premium Branded (scoped) ---------- */
     :root {
       --ink: #0f172a;     /* slate-900 */
       --muted: #475569;   /* slate-600 */
@@ -112,9 +112,10 @@
       min-width: 0;
     }
 
+    /* CHANGE 1: Make headings bold in Vehicle Information */
     .k {
-      color: var(--muted);
-      font-weight: 600;
+      color: var(--ink);
+      font-weight: 700;
       font-size: 0.92rem;
       white-space: nowrap;
     }
@@ -154,7 +155,7 @@
       font-size: 1.05rem;
     }
 
-    /* Table */
+    /* Table container */
     .table-wrap {
       margin-top: 1rem;
       border: 1px solid var(--line);
@@ -166,32 +167,35 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.93rem;
+      background: #fff;
     }
 
     thead th {
       text-align: left;
-      padding: 0.65rem 0.65rem;
+      padding: 0.7rem 0.65rem;
       background: #f7f9fc;
       color: var(--ink);
       border-bottom: 1px solid var(--line);
       font-weight: 800;
+      letter-spacing: 0.2px;
     }
 
+    /* CHANGE 2: Make maintenance section feel like a formatted list, not a spreadsheet */
     tbody td {
-      padding: 0.65rem 0.65rem;
-      border-bottom: 1px solid #eee;
+      padding: 0.9rem 0.65rem;     /* more vertical rhythm */
+      border-bottom: 1px solid var(--line);
       vertical-align: top;
       color: var(--ink);
       line-height: 1.35;
     }
 
-    tbody tr:last-child td {
-      border-bottom: none;
+    /* Soft “card-like” separation between records while keeping table alignment */
+    tbody tr + tr td {
+      border-top: 10px solid #fff; /* visual spacing between entries */
     }
 
-    /* Zebra striping */
-    tbody tr:nth-child(even) td {
-      background: #fbfdff;
+    tbody tr:last-child td {
+      border-bottom: none;
     }
 
     .muted {
@@ -275,11 +279,6 @@
       /* Avoid row splitting */
       tr, td, th {
         page-break-inside: avoid;
-      }
-
-      /* Keeps premium look but reduces ink coverage */
-      tbody tr:nth-child(even) td {
-        background: #f8fafc;
       }
     }
   </style>
@@ -410,7 +409,6 @@
   }
 
   function makeReportNo(vin) {
-    // simple deterministic-ish report number for display
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, "0");
@@ -427,7 +425,6 @@
       return;
     }
 
-    // header fields
     document.getElementById("vinDisplay").textContent = vin;
     document.getElementById("generatedOn").textContent = new Date().toLocaleString();
     document.getElementById("reportNo").textContent = makeReportNo(vin);
@@ -469,15 +466,12 @@
         return;
       }
 
-      // sort newest first for table display (prefer date_performed, fallback to timestamp)
       rows.sort((a, b) =>
         new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
       );
 
-      // summary: last mileage is newest record odometer (if parseable)
       const lastOdo = parseOdoSafe(rows[0].odometer);
 
-      // summary: date range (oldest to newest) using date_performed fallback timestamp
       const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
       const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
       const rangeText = (oldestDate && newestDate)
@@ -492,7 +486,6 @@
         ? window.WG.renderMultilineBullets
         : (t => (t ? String(t) : "—"));
 
-      // render table
       const tbody = rows.map(r => {
         const date = formatDateShort(r.date_performed || r.timestamp);
         const odo = parseOdoSafe(r.odometer);

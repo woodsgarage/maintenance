@@ -13,9 +13,15 @@
       --muted: #475569;
       --line: #e2e8f0;
       --paper: #ffffff;
+
+      /* Brand tone (Woods Garage blue) */
       --accent: #1f6feb;
-      --accent-soft: #eef5ff;
-      --header-bg: #f1f6ff;
+
+      /* Tuned: slightly stronger than before, still print-friendly */
+      --accent-soft: #e6efff;
+
+      /* Page header background (slightly lighter than entry header for hierarchy) */
+      --header-bg: #eef5ff;
     }
 
     .report-shell {
@@ -69,7 +75,6 @@
     .shop-meta {
       text-align: left;
     }
-
     @media (min-width: 700px) {
       .shop-meta {
         text-align: right;
@@ -112,6 +117,8 @@
     .k {
       font-weight: 700;
       color: var(--ink);
+      white-space: nowrap;
+      font-size: 0.92rem;
     }
 
     /* ---------- Summary ---------- */
@@ -131,7 +138,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.75rem;
-      background: var(--accent-soft);
+      background: #f3f7ff; /* slightly lighter than entry header band */
     }
 
     .summary-card .label {
@@ -139,6 +146,7 @@
       text-transform: uppercase;
       font-weight: 700;
       color: var(--muted);
+      letter-spacing: 0.6px;
     }
 
     .summary-card .value {
@@ -159,16 +167,40 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.9rem;
+      background: #fff;
+      break-inside: avoid;
       page-break-inside: avoid;
     }
 
+    /* Strong separation + color band on each card header */
     .entry-header {
-      font-weight: 800;
-      margin-bottom: 0.4rem;
+      background: var(--accent-soft);
+      padding: 0.55rem 0.75rem;
+      margin: -0.9rem -0.9rem 0.65rem -0.9rem;
+      border-radius: 12px 12px 0 0;
+      border-bottom: 1px solid var(--line);
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: 0.2px;
+    }
+
+    /* Page-aware spacing:
+       Ensure an entry has enough vertical space to include header + at least one content line
+       so headers don’t orphan at a page break. */
+    .entry {
+      /* conservative minimum; helps print engines decide earlier breaks */
+      min-height: 5.6rem;
+    }
+
+    /* Keep header and first section glued together */
+    .entry-header,
+    .entry-section.first {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
     .entry-section {
-      margin-top: 0.4rem;
+      margin-top: 0.45rem;
     }
 
     .entry-section strong {
@@ -219,6 +251,17 @@
         box-shadow: none;
         border-radius: 0;
         padding: 0;
+      }
+
+      /* Reduce ink while keeping separation */
+      .shop-header {
+        background: #f6f9ff !important;
+      }
+      .entry-header {
+        background: #eef4ff !important;
+      }
+      .summary-card {
+        background: #f7f9fd !important;
       }
     }
   </style>
@@ -296,71 +339,133 @@
 <script>
   const vin = new URLSearchParams(window.location.search).get("vin");
 
-  function formatDateShort(v) {
+  function normalizeVin(v) {
+    return String(v ?? "").trim();
+  }
+
+  function parseDateSafe(v) {
     const d = new Date(v);
-    return isNaN(d) ? "N/A" :
-      d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDateShort(v) {
+    const d = parseDateSafe(v);
+    if (!d) return "N/A";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
 
   function parseOdoSafe(v) {
-    const n = Number(String(v ?? "").replace(/,/g, ""));
+    const n = Number(String(v ?? "").replace(/,/g, "").trim());
     return Number.isFinite(n) ? n : null;
   }
 
+  function fmtNum(n) {
+    return (n === null || n === undefined) ? "—" : Number(n).toLocaleString();
+  }
+
   function makeReportNo(vin) {
-    const d = new Date();
-    return `WG-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${(vin||"").slice(-6).toUpperCase()}`;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const tail = (vin || "").slice(-6).toUpperCase();
+    return `WG-${y}${m}${d}-${tail || "REPORT"}`;
   }
 
   async function loadReport() {
-    if (!vin) return;
+    if (!vin) {
+      alert("VIN not found. Cannot generate report.");
+      document.getElementById("rows").textContent = "VIN missing.";
+      return;
+    }
 
     document.getElementById("vinDisplay").textContent = vin;
     document.getElementById("generatedOn").textContent = new Date().toLocaleString();
     document.getElementById("reportNo").textContent = makeReportNo(vin);
 
-    const [veh, maint] = await Promise.all([
-      fetch(`${API_URL}?sheet=Vehicles`).then(r => r.json()),
-      fetch(`${API_URL}?sheet=Maintenance`).then(r => r.json())
-    ]);
+    try {
+      const [vehResp, maintResp] = await Promise.all([
+        fetch(`${API_URL}?sheet=Vehicles`),
+        fetch(`${API_URL}?sheet=Maintenance`)
+      ]);
 
-    const vehicle = veh.find(v => String(v.vin).trim() === vin.trim());
-    if (vehicle) {
-      vehicleName.textContent = vehicle.name || "—";
-      vehicleYear.textContent = vehicle.year || "—";
-      vehicleMake.textContent = vehicle.make || "—";
-      vehicleModel.textContent = vehicle.model || "—";
+      const vehicles = await vehResp.json();
+      const maintenance = await maintResp.json();
+
+      const v = (Array.isArray(vehicles) ? vehicles : []).find(r =>
+        normalizeVin(r.vin || r.VIN) === normalizeVin(vin)
+      );
+
+      document.getElementById("vehicleName").textContent = v?.name || "—";
+      document.getElementById("vehicleYear").textContent = v?.year || "—";
+      document.getElementById("vehicleMake").textContent = v?.make || "—";
+      document.getElementById("vehicleModel").textContent = v?.model || "—";
+
+      const rows = (Array.isArray(maintenance) ? maintenance : [])
+        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
+
+      if (!rows.length) {
+        document.getElementById("totalRecords").textContent = "0";
+        document.getElementById("lastMileage").textContent = "—";
+        document.getElementById("dateRange").textContent = "—";
+        document.getElementById("rows").innerHTML = "<div class='muted'>No maintenance records found for this VIN.</div>";
+        return;
+      }
+
+      // Newest first (prefer date_performed, fallback to timestamp)
+      rows.sort((a, b) =>
+        new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
+      );
+
+      // Summary
+      const lastOdo = parseOdoSafe(rows[0].odometer);
+      document.getElementById("totalRecords").textContent = String(rows.length);
+      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : (rows[0].odometer || "—");
+
+      const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
+      const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
+      document.getElementById("dateRange").textContent = (oldestDate && newestDate)
+        ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
+        : "—";
+
+      const bullets = (window.WG && window.WG.renderMultilineBullets)
+        ? window.WG.renderMultilineBullets
+        : (t => (t ? String(t) : "—"));
+
+      const html = rows.map(r => {
+        const dateText = formatDateShort(r.date_performed || r.timestamp);
+        const odo = parseOdoSafe(r.odometer);
+        const odoText = (odo !== null) ? `${fmtNum(odo)} mi` : ((r.odometer ? `${r.odometer} mi` : "—"));
+
+        return `
+          <div class="entry">
+            <div class="entry-header">${dateText} • ${odoText}</div>
+
+            <div class="entry-section first"><strong>Service:</strong> ${bullets(r.service)}</div>
+            <div class="entry-section"><strong>Parts:</strong> ${bullets(r.parts)}</div>
+            <div class="entry-section"><strong>Notes:</strong> ${bullets(r.notes)}</div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("rows").innerHTML = html;
+
+    } catch (err) {
+      console.error("Report load failed:", err);
+      document.getElementById("rows").textContent = "Unable to load report data.";
     }
-
-    const rows = maint
-      .filter(r => String(r.vin).trim() === vin.trim())
-      .sort((a,b) => new Date(b.date_performed||b.timestamp) - new Date(a.date_performed||a.timestamp));
-
-    totalRecords.textContent = rows.length;
-    lastMileage.textContent = rows[0]?.odometer || "—";
-    dateRange.textContent =
-      rows.length ? `${formatDateShort(rows[rows.length-1].date_performed||rows[rows.length-1].timestamp)} – ${formatDateShort(rows[0].date_performed||rows[0].timestamp)}` : "—";
-
-    const bullets = window.WG?.renderMultilineBullets || (t => t || "—");
-
-    rowsEl = rows.map(r => `
-      <div class="entry">
-        <div class="entry-header">
-          ${formatDateShort(r.date_performed||r.timestamp)} • ${parseOdoSafe(r.odometer)?.toLocaleString() || "—"} mi
-        </div>
-        <div class="entry-section"><strong>Service:</strong> ${bullets(r.service)}</div>
-        <div class="entry-section"><strong>Parts:</strong> ${bullets(r.parts)}</div>
-        <div class="entry-section"><strong>Notes:</strong> ${bullets(r.notes)}</div>
-      </div>
-    `).join("");
-
-    document.getElementById("rows").innerHTML = rowsEl || "No records found.";
   }
 
-  printBtn.onclick = () => window.print();
-  backBtn.onclick = () => location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  vehicleBtn.onclick = () => location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  homeBtn.onclick = () => location.href = "index.html";
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+  document.getElementById("backBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "history.html";
+    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("vehicleBtn").addEventListener("click", () => {
+    if (!vin) return location.href = "index.html";
+    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  });
+  document.getElementById("homeBtn").addEventListener("click", () => location.href = "index.html");
 
   document.addEventListener("DOMContentLoaded", loadReport);
 </script>

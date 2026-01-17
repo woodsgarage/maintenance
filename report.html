@@ -132,7 +132,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 0.75rem;
-      background: #f3f7ff; /* a touch lighter than entry header band */
+      background: #f3f7ff;
     }
 
     .summary-card .label {
@@ -206,9 +206,29 @@
       color: var(--muted);
     }
 
-    /* Bottom actions */
+    /* ------------------------------------------------------------
+       Bottom actions (CENTERED)
+       Annotation:
+       - The buttons were previously "visually off-center" because
+         the actions card didn't enforce the same width + horizontal
+         centering rules as the report shell/paper.
+       - Fix:
+         1) margin-left/right: auto centers the card itself.
+         2) max-width matches .report-shell so it aligns with the report.
+         3) justify-content:center centers the buttons inside the card.
+       ------------------------------------------------------------ */
     #bottomActions {
       margin-top: 1rem;
+
+      /* Center the actions card under the report */
+      margin-left: auto;
+      margin-right: auto;
+
+      /* Match the report width */
+      width: 100%;
+      max-width: 900px;
+
+      /* Center the buttons inside the card */
       display: flex;
       justify-content: center;
       gap: 0.75rem;
@@ -219,10 +239,9 @@
     @page { margin: 0.5in; }
 
     @media print {
-      /* Remove all non-report UI */
       header, footer, .card.actions { display: none !important; }
 
-      /* FIX 1: Force white page canvas in the PDF */
+      /* Force white print canvas (removes side background) */
       body { background: #fff !important; }
       .container {
         background: #fff !important;
@@ -232,23 +251,21 @@
         align-items: stretch !important;
       }
 
-      /* FIX 2: Give the report some inner padding so borders don't get clipped */
+      /* Add padding so borders don't get clipped */
       .paper {
         box-shadow: none !important;
         border-radius: 0 !important;
         padding: 0.25in !important;
       }
 
-      /* FIX 3: Remove the screen "full-bleed" negative margins in print */
+      /* Remove the screen full-bleed negative margins in print */
       .shop-header {
         margin: 0 0 0.2in 0 !important;
         border-radius: 0 !important;
-        background: #f6f9ff !important; /* still colored, low-ink */
+        background: #f6f9ff !important;
       }
 
-      /* Keep the entry header band but lighten for ink */
       .entry-header { background: #eef4ff !important; }
-
       .summary-card { background: #f7f9fd !important; }
     }
   </style>
@@ -307,6 +324,7 @@
 
     </div>
 
+    <!-- Bottom Actions -->
     <div class="card actions" id="bottomActions">
       <button id="printBtn">Print / Save as PDF</button>
       <button id="backBtn">Back to History</button>

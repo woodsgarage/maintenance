@@ -6,64 +6,57 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* Professional report styling is kept scoped to this page only */
+    /* ---------- Premium Entry-Style Report (Scoped) ---------- */
 
-    /* ---------- Premium Branded (scoped) ---------- */
     :root {
-      --ink: #0f172a;     /* slate-900 */
-      --muted: #475569;   /* slate-600 */
-      --line: #e2e8f0;    /* slate-200 */
-      --paper: #fff;
-      --accent: #1f6feb;  /* Woods Garage blue */
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --paper: #ffffff;
+      --accent: #1f6feb;
       --accent-soft: #eef5ff;
+      --header-bg: #f1f6ff;
     }
 
-    /* Screen layout */
     .report-shell {
       width: 100%;
       max-width: 900px;
       margin: 0 auto;
     }
 
-    .report-toolbar {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-
-    /* Report paper */
     .paper {
       background: var(--paper);
       border-radius: 16px;
       padding: 1.25rem;
-      width: 100%;
       box-shadow: 0 10px 20px rgba(0,0,0,0.12);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
                    Roboto, "Helvetica Neue", Arial, sans-serif;
       color: var(--ink);
     }
 
-    /* Header */
+    /* ---------- Header with background ---------- */
     .shop-header {
       display: grid;
       grid-template-columns: 1fr;
       gap: 0.75rem;
-      padding-bottom: 0.75rem;
+      padding: 1rem;
+      margin: -1.25rem -1.25rem 1rem -1.25rem;
+      background: var(--header-bg);
       border-bottom: 3px solid var(--accent);
+      border-radius: 16px 16px 0 0;
     }
 
     @media (min-width: 700px) {
-      .shop-header { grid-template-columns: 1fr 1fr; }
+      .shop-header {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+      }
     }
 
     .shop-brand h2 {
       margin: 0;
-      font-size: 1.4rem;
-      color: var(--ink);
-      letter-spacing: 0.75px;
+      font-size: 1.45rem;
+      letter-spacing: 0.8px;
     }
 
     .shop-brand p,
@@ -76,11 +69,14 @@
     .shop-meta {
       text-align: left;
     }
+
     @media (min-width: 700px) {
-      .shop-meta { text-align: right; }
+      .shop-meta {
+        text-align: right;
+      }
     }
 
-    /* Vehicle info block */
+    /* ---------- Blocks ---------- */
     .block {
       margin-top: 1rem;
       border: 1px solid var(--line);
@@ -91,48 +87,44 @@
     .block-title {
       font-weight: 700;
       color: var(--accent);
-      margin: 0 0 0.5rem 0;
-      font-size: 1rem;
+      margin-bottom: 0.5rem;
     }
 
+    /* Vehicle info */
     .kv-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 0.35rem 1rem;
+      gap: 0.4rem 1rem;
     }
+
     @media (min-width: 700px) {
-      .kv-grid { grid-template-columns: 1fr 1fr; }
+      .kv-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .kv {
       display: grid;
       grid-template-columns: 140px 1fr;
       gap: 0.5rem;
-      align-items: baseline;
-      min-width: 0;
     }
 
-    /* CHANGE 1: Make headings bold in Vehicle Information */
     .k {
-      color: var(--ink);
       font-weight: 700;
-      font-size: 0.92rem;
-      white-space: nowrap;
-    }
-    .v {
       color: var(--ink);
-      font-size: 0.98rem;
-      overflow-wrap: anywhere;
     }
 
-    /* Summary */
+    /* ---------- Summary ---------- */
     .summary-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 0.5rem 1rem;
     }
+
     @media (min-width: 700px) {
-      .summary-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .summary-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
     }
 
     .summary-card {
@@ -141,99 +133,72 @@
       padding: 0.75rem;
       background: var(--accent-soft);
     }
+
     .summary-card .label {
-      color: var(--muted);
-      font-weight: 700;
       font-size: 0.85rem;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 0.25rem;
-    }
-    .summary-card .value {
-      color: var(--accent);
-      font-weight: 800;
-      font-size: 1.05rem;
-    }
-
-    /* Table container */
-    .table-wrap {
-      margin-top: 1rem;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.93rem;
-      background: #fff;
-    }
-
-    thead th {
-      text-align: left;
-      padding: 0.7rem 0.65rem;
-      background: #f7f9fc;
-      color: var(--ink);
-      border-bottom: 1px solid var(--line);
-      font-weight: 800;
-      letter-spacing: 0.2px;
-    }
-
-    /* CHANGE 2: Make maintenance section feel like a formatted list, not a spreadsheet */
-    tbody td {
-      padding: 0.9rem 0.65rem;     /* more vertical rhythm */
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-      color: var(--ink);
-      line-height: 1.35;
-    }
-
-    /* Soft “card-like” separation between records while keeping table alignment */
-    tbody tr + tr td {
-      border-top: 10px solid #fff; /* visual spacing between entries */
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    .muted {
+      font-weight: 700;
       color: var(--muted);
     }
 
-    .nowrap { white-space: nowrap; }
-
-    /* Multi-line bullets (Service / Parts / Notes) */
-    .mlist {
-      margin: 0.1rem 0 0 0;
-      padding-left: 1rem;
+    .summary-card .value {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--accent);
     }
-    .mlist li {
-      margin: 0 0 0.15rem 0;
+
+    /* ---------- Maintenance entries (NO TABLE) ---------- */
+    .entries {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .entry {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.9rem;
+      page-break-inside: avoid;
+    }
+
+    .entry-header {
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+
+    .entry-section {
+      margin-top: 0.4rem;
+    }
+
+    .entry-section strong {
+      color: var(--ink);
+    }
+
+    /* Bullets */
+    .mlist {
+      margin: 0.15rem 0 0 1rem;
       padding: 0;
     }
+
+    .mlist li {
+      margin: 0 0 0.15rem 0;
+    }
+
     .mlist li::marker {
-      color: #94a3b8; /* slate-400 */
+      color: #94a3b8;
     }
 
     /* Footer */
     .report-footer {
       margin-top: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      color: var(--muted);
       font-size: 0.9rem;
+      color: var(--muted);
     }
 
-    /* Bottom actions spacing + centering (scoped to this page only) */
+    /* Bottom actions */
     #bottomActions {
       margin-top: 1rem;
-      margin-left: auto;
-      margin-right: auto;
-      width: 100%;
-      max-width: 900px;
       display: flex;
       justify-content: center;
       gap: 0.75rem;
@@ -246,39 +211,14 @@
     }
 
     @media print {
-      header, footer, nav, .navbar-bottom, .report-toolbar, .card.actions {
+      header, footer, .card.actions {
         display: none !important;
       }
 
-      body {
-        background: #fff !important;
-      }
-
-      .container {
-        margin: 0 !important;
-        padding: 0 !important;
-        max-width: none !important;
-        align-items: stretch !important;
-      }
-
       .paper {
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        padding: 0 !important;
-      }
-
-      .table-wrap {
-        border-radius: 0 !important;
-      }
-
-      /* Repeat table headers across printed pages */
-      thead {
-        display: table-header-group;
-      }
-
-      /* Avoid row splitting */
-      tr, td, th {
-        page-break-inside: avoid;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
       }
     }
   </style>
@@ -291,14 +231,14 @@
 
 <main class="container">
   <div class="report-shell">
+    <div class="paper">
 
-    <div class="paper" id="paper">
-      <!-- Shop Header -->
+      <!-- Header -->
       <section class="shop-header">
         <div class="shop-brand">
           <h2>Woods Garage</h2>
           <p>Service & Maintenance Report</p>
-          <p class="muted">service.woodsgarage.net</p>
+          <p>service.woodsgarage.net</p>
         </div>
         <div class="shop-meta">
           <p><strong>Report #:</strong> <span id="reportNo">—</span></p>
@@ -311,10 +251,10 @@
       <section class="block">
         <p class="block-title">Vehicle Information</p>
         <div class="kv-grid">
-          <div class="kv"><div class="k">Vehicle</div><div class="v" id="vehicleName">—</div></div>
-          <div class="kv"><div class="k">Year</div><div class="v" id="vehicleYear">—</div></div>
-          <div class="kv"><div class="k">Make</div><div class="v" id="vehicleMake">—</div></div>
-          <div class="kv"><div class="k">Model</div><div class="v" id="vehicleModel">—</div></div>
+          <div class="kv"><div class="k">Vehicle</div><div id="vehicleName">—</div></div>
+          <div class="kv"><div class="k">Year</div><div id="vehicleYear">—</div></div>
+          <div class="kv"><div class="k">Make</div><div id="vehicleMake">—</div></div>
+          <div class="kv"><div class="k">Model</div><div id="vehicleModel">—</div></div>
         </div>
       </section>
 
@@ -322,56 +262,29 @@
       <section class="block">
         <p class="block-title">Summary</p>
         <div class="summary-grid">
-          <div class="summary-card">
-            <div class="label">Total Records</div>
-            <div class="value" id="totalRecords">—</div>
-          </div>
-          <div class="summary-card">
-            <div class="label">Last Mileage</div>
-            <div class="value" id="lastMileage">—</div>
-          </div>
-          <div class="summary-card">
-            <div class="label">Date Range</div>
-            <div class="value" id="dateRange">—</div>
-          </div>
+          <div class="summary-card"><div class="label">Total Records</div><div class="value" id="totalRecords">—</div></div>
+          <div class="summary-card"><div class="label">Last Mileage</div><div class="value" id="lastMileage">—</div></div>
+          <div class="summary-card"><div class="label">Date Range</div><div class="value" id="dateRange">—</div></div>
         </div>
       </section>
 
-      <!-- Table -->
-      <section class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">Date Performed</th>
-              <th class="nowrap">Odometer</th>
-              <th>Service</th>
-              <th>Parts</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody id="rows">
-            <tr>
-              <td colspan="5" class="muted">Loading…</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Maintenance Entries -->
+      <section class="entries" id="rows">
+        Loading…
       </section>
 
-      <!-- Footer note -->
       <section class="report-footer">
-        <div><strong>Disclaimer:</strong> This report is generated from recorded maintenance entries and may contain customer-supplied notes.</div>
-        <div class="muted">© 2026 Woods Garage </div>
+        <strong>Disclaimer:</strong> This report is generated from recorded maintenance entries and may contain customer-supplied notes.
       </section>
+
     </div>
 
-    <!-- Bottom Actions Card (moved below report preview) -->
-    <div class="card actions report-toolbar" id="bottomActions">
+    <div class="card actions" id="bottomActions">
       <button id="printBtn">Print / Save as PDF</button>
       <button id="backBtn">Back to History</button>
       <button id="vehicleBtn">Vehicle Dashboard</button>
       <button id="homeBtn">Home</button>
     </div>
-
   </div>
 </main>
 
@@ -381,145 +294,73 @@
 
 <script src="app.js"></script>
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const vin = params.get("vin");
-
-  function normalizeVin(v) {
-    return String(v ?? "").trim();
-  }
-
-  function parseDateSafe(v) {
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
-  }
+  const vin = new URLSearchParams(window.location.search).get("vin");
 
   function formatDateShort(v) {
-    const d = parseDateSafe(v);
-    if (!d) return "N/A";
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    const d = new Date(v);
+    return isNaN(d) ? "N/A" :
+      d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
 
   function parseOdoSafe(v) {
-    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+    const n = Number(String(v ?? "").replace(/,/g, ""));
     return Number.isFinite(n) ? n : null;
   }
 
-  function fmtNum(n) {
-    return (n === null || n === undefined) ? "—" : Number(n).toLocaleString();
-  }
-
   function makeReportNo(vin) {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    const tail = (vin || "").slice(-6).toUpperCase();
-    return `WG-${y}${m}${d}-${tail || "REPORT"}`;
+    const d = new Date();
+    return `WG-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${(vin||"").slice(-6).toUpperCase()}`;
   }
 
   async function loadReport() {
-    if (!vin) {
-      alert("VIN not found. Cannot generate report.");
-      document.getElementById("rows").innerHTML =
-        `<tr><td colspan="5" class="muted">VIN missing.</td></tr>`;
-      return;
-    }
+    if (!vin) return;
 
     document.getElementById("vinDisplay").textContent = vin;
     document.getElementById("generatedOn").textContent = new Date().toLocaleString();
     document.getElementById("reportNo").textContent = makeReportNo(vin);
 
-    try {
-      const [vehResp, maintResp] = await Promise.all([
-        fetch(`${API_URL}?sheet=Vehicles`),
-        fetch(`${API_URL}?sheet=Maintenance`)
-      ]);
+    const [veh, maint] = await Promise.all([
+      fetch(`${API_URL}?sheet=Vehicles`).then(r => r.json()),
+      fetch(`${API_URL}?sheet=Maintenance`).then(r => r.json())
+    ]);
 
-      const vehicles = await vehResp.json();
-      const maintenance = await maintResp.json();
-
-      const v = (Array.isArray(vehicles) ? vehicles : []).find(r =>
-        normalizeVin(r.vin || r.VIN) === normalizeVin(vin)
-      );
-
-      if (v) {
-        document.getElementById("vehicleName").textContent = v.name || "—";
-        document.getElementById("vehicleYear").textContent = v.year || "—";
-        document.getElementById("vehicleMake").textContent = v.make || "—";
-        document.getElementById("vehicleModel").textContent = v.model || "—";
-      } else {
-        document.getElementById("vehicleName").textContent = "—";
-        document.getElementById("vehicleYear").textContent = "—";
-        document.getElementById("vehicleMake").textContent = "—";
-        document.getElementById("vehicleModel").textContent = "—";
-      }
-
-      const rows = (Array.isArray(maintenance) ? maintenance : [])
-        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
-
-      if (!rows.length) {
-        document.getElementById("totalRecords").textContent = "0";
-        document.getElementById("lastMileage").textContent = "—";
-        document.getElementById("dateRange").textContent = "—";
-        document.getElementById("rows").innerHTML =
-          `<tr><td colspan="5" class="muted">No maintenance records found for this VIN.</td></tr>`;
-        return;
-      }
-
-      rows.sort((a, b) =>
-        new Date(b.date_performed || b.timestamp) - new Date(a.date_performed || a.timestamp)
-      );
-
-      const lastOdo = parseOdoSafe(rows[0].odometer);
-
-      const newestDate = parseDateSafe(rows[0].date_performed || rows[0].timestamp);
-      const oldestDate = parseDateSafe(rows[rows.length - 1].date_performed || rows[rows.length - 1].timestamp);
-      const rangeText = (oldestDate && newestDate)
-        ? `${oldestDate.toLocaleDateString()} – ${newestDate.toLocaleDateString()}`
-        : "—";
-
-      document.getElementById("totalRecords").textContent = String(rows.length);
-      document.getElementById("lastMileage").textContent = (lastOdo !== null) ? fmtNum(lastOdo) : "—";
-      document.getElementById("dateRange").textContent = rangeText;
-
-      const bullets = (window.WG && window.WG.renderMultilineBullets)
-        ? window.WG.renderMultilineBullets
-        : (t => (t ? String(t) : "—"));
-
-      const tbody = rows.map(r => {
-        const date = formatDateShort(r.date_performed || r.timestamp);
-        const odo = parseOdoSafe(r.odometer);
-
-        return `
-          <tr>
-            <td class="nowrap">${date}</td>
-            <td class="nowrap">${odo !== null ? fmtNum(odo) : (r.odometer || "—")}</td>
-            <td>${bullets(r.service)}</td>
-            <td>${bullets(r.parts)}</td>
-            <td>${bullets(r.notes)}</td>
-          </tr>
-        `;
-      }).join("");
-
-      document.getElementById("rows").innerHTML = tbody;
-
-    } catch (err) {
-      console.error("Report load failed:", err);
-      document.getElementById("rows").innerHTML =
-        `<tr><td colspan="5" class="muted">Unable to load report data.</td></tr>`;
+    const vehicle = veh.find(v => String(v.vin).trim() === vin.trim());
+    if (vehicle) {
+      vehicleName.textContent = vehicle.name || "—";
+      vehicleYear.textContent = vehicle.year || "—";
+      vehicleMake.textContent = vehicle.make || "—";
+      vehicleModel.textContent = vehicle.model || "—";
     }
+
+    const rows = maint
+      .filter(r => String(r.vin).trim() === vin.trim())
+      .sort((a,b) => new Date(b.date_performed||b.timestamp) - new Date(a.date_performed||a.timestamp));
+
+    totalRecords.textContent = rows.length;
+    lastMileage.textContent = rows[0]?.odometer || "—";
+    dateRange.textContent =
+      rows.length ? `${formatDateShort(rows[rows.length-1].date_performed||rows[rows.length-1].timestamp)} – ${formatDateShort(rows[0].date_performed||rows[0].timestamp)}` : "—";
+
+    const bullets = window.WG?.renderMultilineBullets || (t => t || "—");
+
+    rowsEl = rows.map(r => `
+      <div class="entry">
+        <div class="entry-header">
+          ${formatDateShort(r.date_performed||r.timestamp)} • ${parseOdoSafe(r.odometer)?.toLocaleString() || "—"} mi
+        </div>
+        <div class="entry-section"><strong>Service:</strong> ${bullets(r.service)}</div>
+        <div class="entry-section"><strong>Parts:</strong> ${bullets(r.parts)}</div>
+        <div class="entry-section"><strong>Notes:</strong> ${bullets(r.notes)}</div>
+      </div>
+    `).join("");
+
+    document.getElementById("rows").innerHTML = rowsEl || "No records found.";
   }
 
-  document.getElementById("printBtn").addEventListener("click", () => window.print());
-  document.getElementById("backBtn").addEventListener("click", () => {
-    if (!vin) return location.href = "history.html";
-    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  });
-  document.getElementById("vehicleBtn").addEventListener("click", () => {
-    if (!vin) return location.href = "index.html";
-    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  });
-  document.getElementById("homeBtn").addEventListener("click", () => location.href = "index.html");
+  printBtn.onclick = () => window.print();
+  backBtn.onclick = () => location.href = `history.html?vin=${encodeURIComponent(vin)}`;
+  vehicleBtn.onclick = () => location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  homeBtn.onclick = () => location.href = "index.html";
 
   document.addEventListener("DOMContentLoaded", loadReport);
 </script>

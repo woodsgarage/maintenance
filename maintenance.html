@@ -1,63 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Add Maintenance</title>
-  <link rel="stylesheet" href="style.css">
-
-  <style>
-    /* ---------- FIX FORM OVERFLOW (scoped) ---------- */
-    #maintenanceForm *,
-    #maintenanceForm *::before,
-    #maintenanceForm *::after {
-      box-sizing: border-box;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      width: 100%;
-    }
-
-    .form-grid .full { grid-column: 1 / -1; }
-
-    @media (min-width: 700px) {
-      .form-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    .form-actions { grid-column: 1 / -1; }
-
-    .button-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
-      width: 100%;
-    }
-
-    @media (min-width: 520px) {
-      .button-row { grid-template-columns: 1fr 1fr; }
-    }
-
-    .button-row button { width: 100%; }
-
-    .form-grid > div { min-width: 0; }
-    #maintenanceForm input,
-    #maintenanceForm textarea,
-    #maintenanceForm select { max-width: 100%; }
-
-    .hint {
-      margin-top: 0.4rem;
-      font-size: 0.85rem;
-      color: #555;
-    }
-
-    .error {
-      margin-top: 0.4rem;
-      font-size: 0.9rem;
-      color: #b00020;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -66,252 +12,247 @@
 </header>
 
 <main class="container">
+
+  <div class="card" id="pageHeaderCard">
+    <h2 style="margin:0;">Maintenance Entry</h2>
+    <p style="margin:0.5rem 0 0 0; color:#555;">
+      VIN: <strong id="vinText">—</strong>
+    </p>
+  </div>
+
   <div class="card">
-    <form id="maintenanceForm" method="POST" target="hidden_iframe">
-      <input type="hidden" name="type" value="maintenance">
-      <input type="hidden" name="vin" id="vinField">
+    <form id="maintenanceForm">
 
-      <div class="form-grid">
-        <!-- Odometer -->
-        <div>
-          <label for="odometer">Odometer</label>
-          <input
-            type="number"
-            name="odometer"
-            id="odometer"
-            required
-            min="0"
-            step="1"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            autocomplete="off"
-            placeholder="e.g., 125430"
-          >
-          <div class="hint" id="odometerHint"></div>
-          <div class="error" id="odometerError" style="display:none;"></div>
-        </div>
+      <label for="odometer">Odometer</label>
+      <!-- inputmode/pattern helps mobile show numeric keypad -->
+      <input
+        type="number"
+        id="odometer"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        placeholder="e.g., 65100"
+        required
+      />
 
-        <!-- Date Performed -->
-        <div>
-          <label for="date_performed">Date Performed</label>
-          <input
-            type="date"
-            name="date_performed"
-            id="date_performed"
-            required
-          >
-        </div>
+      <label for="service">Service</label>
+      <input
+        type="text"
+        id="service"
+        placeholder="e.g., Oil change, Tire rotation"
+        required
+      />
 
-        <!-- Service -->
-        <div class="full">
-          <label for="service"><strong>Service</strong></label>
-          <textarea
-            id="service"
-            name="service"
-            rows="3"
-            placeholder="Press Enter to add each service on a new line"
-            required
-          ></textarea>
-        </div>
+      <label for="parts">Parts</label>
+      <input
+        type="text"
+        id="parts"
+        placeholder="e.g., Filter, 15W-40, Brake pads"
+      />
 
-        <!-- Parts -->
-        <div class="full">
-          <label for="parts"><strong>Parts</strong></label>
-          <textarea
-            id="parts"
-            name="parts"
-            rows="3"
-            maxlength="200"
-            placeholder="Press Enter to add each part on a new line"
-          ></textarea>
-        </div>
+      <label for="notes">Notes</label>
+      <textarea
+        id="notes"
+        rows="4"
+        placeholder="Optional notes…"
+      ></textarea>
 
-        <!-- Notes -->
-        <div class="full">
-          <label for="notes">Notes</label>
-          <textarea
-            name="notes"
-            id="notes"
-            rows="4"
-            maxlength="1000"
-            placeholder="Observations, torque specs, next steps"
-          ></textarea>
-        </div>
-
-        <!-- Submit Buttons -->
-        <div class="form-actions">
-          <div class="button-row">
-            <button type="submit" id="saveBtn">Save Maintenance</button>
-            <button type="button" id="cancelBtn">Cancel</button>
-          </div>
-        </div>
+      <!-- Two submit modes -->
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
+        <button type="button" id="btnSaveReturn">Save &amp; Return</button>
+        <button type="button" id="btnSaveAddAnother">Save &amp; Add Another</button>
       </div>
+
+      <p id="statusText" style="margin-top:0.75rem; color:#555;"></p>
     </form>
   </div>
 
-  <!-- Bottom actions -->
-  <div class="card actions">
-    <button id="homeBtn">Home</button>
-    <button id="vehicleBtn">Vehicle Dashboard</button>
-    <button id="historyBtn">Maintenance History</button>
-    <button id="scheduleBtn">Schedule Maintenance</button>
-  </div>
 </main>
 
 <footer>
   &copy; 2026 Woods Garage Maintenance
 </footer>
 
-<iframe name="hidden_iframe" style="display:none;"></iframe>
-
 <script src="app.js"></script>
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const vin = params.get("vin");
+  const vin = qs("vin");
+  const vinTextEl = document.getElementById("vinText");
+  const statusText = document.getElementById("statusText");
 
-  const form = document.getElementById("maintenanceForm");
-  const iframe = document.getElementsByName("hidden_iframe")[0];
+  const odometerEl = document.getElementById("odometer");
+  const serviceEl = document.getElementById("service");
+  const partsEl = document.getElementById("parts");
+  const notesEl = document.getElementById("notes");
 
-  const vinField = document.getElementById("vinField");
-  const odometerInput = document.getElementById("odometer");
-  const odometerHint = document.getElementById("odometerHint");
-  const odometerError = document.getElementById("odometerError");
-  const datePerformedInput = document.getElementById("date_performed");
+  const btnSaveReturn = document.getElementById("btnSaveReturn");
+  const btnSaveAddAnother = document.getElementById("btnSaveAddAnother");
 
-  const saveBtn = document.getElementById("saveBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-
-  let lastRecordedOdo = null;
-
-  if (!vin) {
-    alert("Vehicle VIN not found. Cannot add maintenance.");
-  } else {
-    vinField.value = vin;
+  function setBusy(isBusy, message) {
+    btnSaveReturn.disabled = isBusy;
+    btnSaveAddAnother.disabled = isBusy;
+    statusText.textContent = message || "";
   }
 
-  // ✅ Use API_URL from app.js (single source of truth)
-  form.action = API_URL;
-
-  function parseDateSafe(v) {
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  function parseOdoSafe(v) {
-    const n = Number(String(v ?? "").replace(/,/g, "").trim());
+  function toNumberOrNull(v) {
+    const n = Number(String(v ?? "").toString().trim());
     return Number.isFinite(n) ? n : null;
   }
 
-  function normalizeVin(v) {
-    return String(v ?? "").trim();
+  function getVinFromRecord(r) {
+    return (r && (r.vin ?? r.VIN)) != null ? String(r.vin ?? r.VIN).trim() : "";
   }
 
-  function showOdoError(msg) {
-    if (!msg) {
-      odometerError.style.display = "none";
-      odometerError.textContent = "";
-      return;
+  function getOdometerFromRecord(r) {
+    // tolerate different column casing
+    return toNumberOrNull(r?.odometer ?? r?.Odometer ?? r?.mileage ?? r?.Mileage);
+  }
+
+  function getTimestampFromRecord(r) {
+    return r?.timestamp ?? r?.Timestamp ?? r?.date ?? r?.Date ?? "";
+  }
+
+  function pickLatestRecord(recordsForVin) {
+    // Sort by timestamp descending when possible, otherwise fall back to last row order
+    const withDate = recordsForVin
+      .map(r => ({ r, d: new Date(getTimestampFromRecord(r)) }))
+      .filter(x => x.d.toString() !== "Invalid Date");
+
+    if (withDate.length > 0) {
+      withDate.sort((a, b) => b.d - a.d);
+      return withDate[0].r;
     }
-    odometerError.style.display = "block";
-    odometerError.textContent = msg;
+
+    // no valid dates; last entry as best-effort
+    return recordsForVin.length ? recordsForVin[recordsForVin.length - 1] : null;
   }
 
-  function setSubmitting(isSubmitting) {
-    saveBtn.disabled = isSubmitting;
-    cancelBtn.disabled = isSubmitting;
-    saveBtn.textContent = isSubmitting ? "Saving..." : "Save Maintenance";
+  async function fetchLastMaintenanceOdometer(forVin) {
+    const all = await getMaintenance(); // JSONP GET from app.js
+    if (!Array.isArray(all)) return null;
+
+    const filtered = all.filter(r => getVinFromRecord(r) === String(forVin).trim());
+    const latest = pickLatestRecord(filtered);
+    return latest ? getOdometerFromRecord(latest) : null;
   }
 
-  async function loadLastOdometer() {
-    if (!vin) return;
-
+  async function prefillOdometerOnLoad() {
+    setBusy(true, "Loading last odometer…");
     try {
-      const resp = await fetch(`${API_URL}?sheet=Maintenance`);
-      const records = await resp.json();
-
-      const vinMatches = (Array.isArray(records) ? records : [])
-        .filter(r => normalizeVin(r.vin || r.VIN) === normalizeVin(vin));
-
-      let latest = null;
-
-      for (const r of vinMatches) {
-        const dt = parseDateSafe(r.timestamp);
-        if (!dt) continue;
-        if (!latest || dt > latest.dt) latest = { r, dt };
-      }
-
-      const last = latest ? latest.r : null;
-      const lastOdo = last ? parseOdoSafe(last.odometer) : null;
-
-      lastRecordedOdo = lastOdo;
-
-      if (lastRecordedOdo !== null) {
-        odometerHint.textContent =
-          `Last recorded mileage for this VIN: ${lastRecordedOdo.toLocaleString()}`;
-        odometerInput.value = lastRecordedOdo + 100;
+      const lastOdo = await fetchLastMaintenanceOdometer(vin);
+      if (lastOdo != null) {
+        odometerEl.value = String(lastOdo + 100); // ON LOAD: +100
+        statusText.textContent = `Prefilled odometer: last (${lastOdo}) + 100`;
       } else {
-        odometerHint.textContent = "No prior mileage found.";
+        statusText.textContent = "No prior maintenance found; enter odometer manually.";
       }
-
-    } catch (err) {
-      console.error("Failed to load last odometer:", err);
-      odometerHint.textContent = "Unable to determine last mileage.";
+    } catch (e) {
+      console.error(e);
+      statusText.textContent = "Could not prefill odometer (check console).";
+    } finally {
+      setBusy(false);
     }
   }
 
-  function validateOdometer() {
-    showOdoError("");
+  async function prefillOdometerAfterSaveAddAnother() {
+    setBusy(true, "Refreshing odometer…");
+    try {
+      const lastOdo = await fetchLastMaintenanceOdometer(vin);
+      if (lastOdo != null) {
+        odometerEl.value = String(lastOdo); // AFTER SAVE & ADD ANOTHER: EXACT (no +100)
+        statusText.textContent = `Ready for next entry. Odometer set to latest: ${lastOdo}`;
+      } else {
+        odometerEl.value = "";
+        statusText.textContent = "No prior maintenance found; enter odometer manually.";
+      }
+    } catch (e) {
+      console.error(e);
+      statusText.textContent = "Could not refresh odometer (check console).";
+    } finally {
+      setBusy(false);
+      odometerEl.focus();
+      odometerEl.select();
+    }
+  }
 
-    const entered = parseOdoSafe(odometerInput.value);
-    if (entered === null) return false;
-
-    if (lastRecordedOdo !== null && entered < lastRecordedOdo) {
-      showOdoError(
-        `Odometer cannot be less than the previous value (${lastRecordedOdo.toLocaleString()}).`
-      );
+  function validate() {
+    if (!vin) {
+      alert("Missing VIN in the URL. Open this page from the Vehicle Dashboard.");
+      return false;
+    }
+    if (!odometerEl.value.trim() || !serviceEl.value.trim()) {
+      alert("Please enter at least Odometer and Service.");
       return false;
     }
     return true;
   }
 
-  odometerInput.addEventListener("input", () => {
-    if (lastRecordedOdo !== null) validateOdometer();
-  });
+  async function saveMaintenance() {
+    const payload = {
+      vin: String(vin).trim(),
+      odometer: odometerEl.value.trim(),
+      service: serviceEl.value.trim(),
+      parts: partsEl.value.trim(),
+      notes: notesEl.value.trim()
+    };
 
-  form.addEventListener("submit", (e) => {
-    if (!validateOdometer()) {
-      e.preventDefault();
+    setBusy(true, "Saving maintenance…");
+    try {
+      const result = await postMaintenance(payload); // POST from app.js
+      if (result && result.status === "success") {
+        return { ok: true };
+      }
+      return { ok: false, message: result?.message || "Unknown error from server" };
+    } catch (e) {
+      console.error(e);
+      return { ok: false, message: "Failed to save (network/API error). See console." };
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function clearEntryFields() {
+    serviceEl.value = "";
+    partsEl.value = "";
+    notesEl.value = "";
+  }
+
+  // Button: Save & Return
+  btnSaveReturn.addEventListener("click", async () => {
+    if (!validate()) return;
+
+    const { ok, message } = await saveMaintenance();
+    if (!ok) {
+      alert("Save failed: " + message);
       return;
     }
 
-    if (!datePerformedInput.value) {
-      e.preventDefault();
-      alert("Please select Date Performed.");
-      datePerformedInput.focus();
+    alert("Maintenance saved!");
+    window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+  });
+
+  // Button: Save & Add Another
+  btnSaveAddAnother.addEventListener("click", async () => {
+    if (!validate()) return;
+
+    const { ok, message } = await saveMaintenance();
+    if (!ok) {
+      alert("Save failed: " + message);
       return;
     }
 
-    form.dataset.submitted = "true";
-    setSubmitting(true);
+    alert("Maintenance saved! Ready for another entry.");
+    clearEntryFields();
+    await prefillOdometerAfterSaveAddAnother();
   });
 
-  iframe.onload = () => {
-    if (form.dataset.submitted !== "true") return;
-    window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  };
-
-  cancelBtn.onclick = () =>
-    window.location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-
-  document.getElementById("homeBtn").onclick = () => location.href = "index.html";
-  document.getElementById("vehicleBtn").onclick = () =>
-    location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("historyBtn").onclick = () =>
-    location.href = `history.html?vin=${encodeURIComponent(vin)}`;
-  document.getElementById("scheduleBtn").onclick = () =>
-    location.href = `schedule.html?vin=${encodeURIComponent(vin)}`;
-
-  document.addEventListener("DOMContentLoaded", loadLastOdometer);
+  // Init
+  document.addEventListener("DOMContentLoaded", async () => {
+    vinTextEl.textContent = vin ? vin : "Missing VIN";
+    if (!vin) {
+      setBusy(true, "Missing VIN. Open this page from the Vehicle Dashboard.");
+      return;
+    }
+    await prefillOdometerOnLoad();
+  });
 </script>
 
 </body>

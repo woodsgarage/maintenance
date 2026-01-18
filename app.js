@@ -2,6 +2,13 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbyeNNBAnSdUm07YsJkUjfzbztn8pEnEBZ9cJJZo2HbVOlmEySYKnHPYKeGe-1i9bPE4iw/exec";
 
 /* -----------------------------
+   URL / query helper
+------------------------------ */
+function qs(name) {
+  return new URLSearchParams(window.location.search).get(name) || "";
+}
+
+/* -----------------------------
    Helpers
 ------------------------------ */
 function normalizeVin(v) {
@@ -52,11 +59,43 @@ function renderMultilineBullets(text) {
   return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
 }
 
-// Export (non-breaking) so pages can use shared helpers without redefining them
+// Export so pages can use shared helpers without redefining them
 window.WG = window.WG || {};
 window.WG.escapeHtml = escapeHtml;
 window.WG.renderMultilineBullets = renderMultilineBullets;
 
+/* -----------------------------
+   Maintenance.html REQUIRED helpers
+   (Enables: odometer prefill + Save & Return / Save & Add Another)
+------------------------------ */
+async function getMaintenance() {
+  const resp = await fetch(`${API_URL}?sheet=Maintenance`);
+  if (!resp.ok) throw new Error(`Maintenance HTTP error! status: ${resp.status}`);
+  const data = await resp.json();
+  return Array.isArray(data) ? data : [];
+}
+
+async function postMaintenance({ vin, odometer, service, parts, notes }) {
+  const resp = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "maintenance",
+      vin,
+      odometer,
+      service,
+      parts,
+      notes
+    })
+  });
+
+  // Expect JSON: {status:"success"} or {status:"error", message:"..."}
+  const result = await resp.json();
+  return result;
+}
+
+/* -----------------------------
+   Build map of last odometer per VIN
+------------------------------ */
 function buildLastOdoMap(maintenanceRows) {
   // vin -> { odo, dt }
   const map = new Map();
@@ -93,7 +132,7 @@ function buildLastOdoMap(maintenanceRows) {
 
 /* -----------------------------
    Fetch Vehicles for Index Page
-   (Now includes Last Mileage from Maintenance)
+   (Includes Last Mileage from Maintenance)
 ------------------------------ */
 async function fetchVehicles() {
   try {
@@ -116,8 +155,8 @@ async function fetchVehicles() {
       const lastOdoMap = buildLastOdoMap(maintenance);
       displayVehicles(vehicles, lastOdoMap);
     } else {
-      document.getElementById("vehicle-list").innerHTML =
-        "<p>No vehicles found.</p>";
+      const el = document.getElementById("vehicle-list");
+      if (el) el.innerHTML = "<p>No vehicles found.</p>";
     }
   } catch (error) {
     console.error("Error fetching vehicles:", error);
@@ -127,8 +166,7 @@ async function fetchVehicles() {
 }
 
 /* -----------------------------
-   Render vehicle cards
-   (Replaces Start Mileage with Last Mileage)
+   Render vehicle cards (Index)
 ------------------------------ */
 function displayVehicles(vehicles, lastOdoMap) {
   const container = document.getElementById("vehicle-list");
@@ -169,7 +207,8 @@ function displayVehicles(vehicles, lastOdoMap) {
 }
 
 /* -----------------------------
-   Fetch Maintenance History
+   Fetch Maintenance History (generic helper)
+   NOTE: This version does not sort; your history.html does its own sorting.
 ------------------------------ */
 async function fetchMaintenance(vin, containerId) {
   try {
@@ -177,8 +216,8 @@ async function fetchMaintenance(vin, containerId) {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-
     const vehicleVin = normalizeVin(vin);
+
     const vehicleRecords = (Array.isArray(data) ? data : [])
       .filter(r => normalizeVin(r.vin || r.VIN) === vehicleVin);
 
@@ -251,8 +290,6 @@ async function fetchContacts(selectId) {
 
 /* -----------------------------
    Submit Scheduled Maintenance
-   NOTE: Kept intact for compatibility with existing site,
-   even though schedule.html uses hidden iframe POST.
 ------------------------------ */
 async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
   const payload = {

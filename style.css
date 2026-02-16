@@ -20,6 +20,12 @@
   --radius: 14px;
   --shadow: 0 10px 30px rgba(0,0,0,0.55);
 
+  /*
+    IMPORTANT:
+    - Avoid `system-ui` here because on Windows it can map to Segoe UI Variable,
+      which can cause subtle differences line-to-line.
+    - Prefer non-variable Segoe UI first.
+  */
   --font: "Segoe UI", "Segoe UI Emoji", "Segoe UI Symbol", Roboto, Arial, sans-serif;
 }
 
@@ -49,6 +55,11 @@ body{
 
   font-family: var(--font);
 
+  /*
+    Hard-lock variable font behavior:
+    - font-optical-sizing + font-variation-settings remove “opsz” differences
+    - font-synthesis prevents the browser from faking weight/style
+  */
   font-optical-sizing: none;
   font-variation-settings: "opsz" 16, "wght" 700;
   font-synthesis: none;
@@ -58,6 +69,7 @@ body{
   font-kerning: normal;
   font-feature-settings: "kern" 1;
 
+  /* Normalize rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -104,6 +116,10 @@ body{
   align-items:center;
 }
 
+/*
+  FORCE: same face + same axis + same weight for both lines.
+  Only size and color differ below.
+*/
 .site-title,
 .site-subtitle{
   font-weight: 700;
@@ -117,6 +133,7 @@ body{
   line-height: 1.1;
 }
 
+/* Only size differs */
 .site-title{
   font-size: 2rem;
   margin: 0;
@@ -154,32 +171,38 @@ main{ padding: 1rem; }
 
 .card + .card{ margin-top: 1rem; }
 
-/* FIX 1: add spacing above bottom action card */
 .card.actions{
   display:flex;
   flex-wrap:wrap;
   gap: 0.75rem;
   justify-content:center;
+
+  /* spacing so it never touches the grid above */
   margin-top: 1rem;
 }
 
 /* -------------------------------
    Vehicle cards
 -------------------------------- */
+
+/* FIX: use grid so each row has equal-height cards */
 .vehicle-list{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
   gap: 1rem;
   justify-content:center;
 
-  /* FIX 2: improves row height consistency */
-  align-items: stretch;
+  /* two-column desktop feel, collapses automatically */
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
 }
 
+/* FIX: make each card fill the row height consistently */
 .vehicle-card{
-  width: min(460px, 100%);
+  width: 100%;
   cursor:pointer;
   transition: transform 0.12s ease, border-color 0.12s ease;
+
+  height: 100%;
+  min-height: 210px; /* ensures uniform baseline even if content is short */
 }
 
 .vehicle-card:hover{
@@ -255,4 +278,9 @@ footer{
 @media (max-width:600px){
   .main-logo{ width: 140px; }
   button{ width:100%; }
+
+  /* keep grid from forcing wide min widths on small screens */
+  .vehicle-list{
+    grid-template-columns: 1fr;
+  }
 }

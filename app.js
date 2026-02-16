@@ -1,196 +1,324 @@
-/* =====================================================
-   Woods Garage — Dark Mode (Black Accent Theme)
-   ===================================================== */
+// Base Apps Script URL (no ?sheet parameter)
+const API_URL = "https://script.google.com/macros/s/AKfycbyeNNBAnSdUm07YsJkUjfzbztn8pEnEBZ9cJJZo2HbVOlmEySYKnHPYKeGe-1i9bPE4iw/exec";
 
-:root{
-  /* Dark surfaces */
-  --bg: #0b0b0c;
-  --panel: #151516;
-  --panel-2: #1b1b1d;
-  --border: rgba(255,255,255,0.08);
-
-  /* Text */
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.70);
-  --subtle: rgba(255,255,255,0.55);
-
-  /* Black accent */
-  --accent: #1f1f21;
-  --accent-2: #2a2a2d;
-  --focus: rgba(255,255,255,0.15);
-
-  /* Status */
-  --danger: #ff4d4d;
-
-  --radius: 14px;
-  --shadow: 0 10px 30px rgba(0,0,0,0.5);
+/* -----------------------------
+   URL / query helper
+------------------------------ */
+function qs(name) {
+  return new URLSearchParams(window.location.search).get(name) || "";
 }
 
-/* ---- Base ---- */
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-
-body{
-  margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,0.04), transparent 55%),
-              radial-gradient(900px 600px at 90% 0%, rgba(255,255,255,0.03), transparent 60%),
-              var(--bg);
-  color: var(--text);
-  line-height: 1.45;
+/* -----------------------------
+   Helpers
+------------------------------ */
+function normalizeVin(v) {
+  return String(v ?? "").trim();
 }
 
-/* ---- Header ---- */
-header{
-  text-align:center;
-  padding: 1.6rem 1rem 1.2rem;
-  background: linear-gradient(135deg, #111111, #181818);
-  border-bottom: 1px solid var(--border);
+function parseDateSafe(v) {
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
 }
 
-header h1{
-  margin: 0.25rem 0 0;
-  font-size: 1.7rem;
+function parseOdoSafe(v) {
+  const n = Number(String(v ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(n) ? n : null;
 }
 
-header p{
-  margin: 0.5rem 0 0;
-  color: var(--muted);
+/* -----------------------------
+   Shared helpers for bullet behavior across pages
+------------------------------ */
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-/* ---- Layout ---- */
-main{ padding: 1rem; }
+/**
+ * Normalized multi-line renderer:
+ * - blank => "N/A"
+ * - single-line => escaped text
+ * - multi-line => <ul class="mlist"><li>...</li></ul> (escaped per line)
+ *
+ * Returns HTML safe to assign into innerHTML.
+ */
+function renderMultilineBullets(text) {
+  const raw = String(text ?? "").trim();
+  if (!raw) return "N/A";
 
-.container{
-  max-width: 980px;
-  margin: 1.5rem auto 0;
-  padding: 0 1rem;
+  const lines = raw
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  if (lines.length <= 1) return escapeHtml(raw);
+
+  return `<ul class="mlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`;
 }
 
-/* ---- Cards ---- */
-.card{
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
-  background-color: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  box-shadow: var(--shadow);
+// Export so pages can use shared helpers without redefining them
+window.WG = window.WG || {};
+window.WG.escapeHtml = escapeHtml;
+window.WG.renderMultilineBullets = renderMultilineBullets;
+
+/* -----------------------------
+   Maintenance.html REQUIRED helpers
+   (Enables: odometer prefill + Save & Return / Save & Add Another)
+------------------------------ */
+async function getMaintenance() {
+  const resp = await fetch(`${API_URL}?sheet=Maintenance`);
+  if (!resp.ok) throw new Error(`Maintenance HTTP error! status: ${resp.status}`);
+  const data = await resp.json();
+  return Array.isArray(data) ? data : [];
 }
 
-.card + .card{ margin-top: 1rem; }
+async function postMaintenance({ vin, odometer, service, parts, notes }) {
+  const resp = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "maintenance",
+      vin,
+      odometer,
+      service,
+      parts,
+      notes
+    })
+  });
 
-.card.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap: 0.75rem;
-  justify-content:center;
+  // Expect JSON: {status:"success"} or {status:"error", message:"..."}
+  const result = await resp.json();
+  return result;
 }
 
-/* ---- Vehicle Cards ---- */
-.vehicle-list{
-  display:flex;
-  flex-wrap:wrap;
-  gap: 1rem;
-  justify-content:center;
+/* -----------------------------
+   Build map of last odometer per VIN
+------------------------------ */
+function buildLastOdoMap(maintenanceRows) {
+  // vin -> { odo, dt }
+  const map = new Map();
+  const rows = Array.isArray(maintenanceRows) ? maintenanceRows : [];
+
+  for (const r of rows) {
+    const vin = normalizeVin(r.vin || r.VIN);
+    if (!vin) continue;
+
+    const odo = parseOdoSafe(r.odometer);
+    if (odo === null) continue;
+
+    const dt = parseDateSafe(r.timestamp);
+
+    if (!map.has(vin)) {
+      map.set(vin, { odo, dt });
+      continue;
+    }
+
+    const prev = map.get(vin);
+
+    // Prefer valid timestamp ordering. Fallback: if timestamps not usable, "last seen" wins.
+    if (dt && prev.dt) {
+      if (dt > prev.dt) map.set(vin, { odo, dt });
+    } else if (dt && !prev.dt) {
+      map.set(vin, { odo, dt });
+    } else if (!dt && !prev.dt) {
+      map.set(vin, { odo, dt: null });
+    }
+  }
+
+  return map;
 }
 
-.vehicle-card{
-  width: min(460px, 100%);
-  cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+/* -----------------------------
+   Fetch Vehicles for Index Page
+   (Includes Last Mileage from Maintenance)
+------------------------------ */
+async function fetchVehicles() {
+  try {
+    // Pull Vehicles + Maintenance in parallel
+    const [vehiclesResp, maintResp] = await Promise.all([
+      fetch(`${API_URL}?sheet=Vehicles`),
+      fetch(`${API_URL}?sheet=Maintenance`)
+    ]);
+
+    if (!vehiclesResp.ok) throw new Error(`Vehicles HTTP error! status: ${vehiclesResp.status}`);
+    if (!maintResp.ok) throw new Error(`Maintenance HTTP error! status: ${maintResp.status}`);
+
+    const vehicles = await vehiclesResp.json();
+    const maintenance = await maintResp.json();
+
+    console.log("Vehicles API data:", vehicles);
+    console.log("Maintenance API data:", maintenance);
+
+    if (Array.isArray(vehicles) && vehicles.length > 0) {
+      const lastOdoMap = buildLastOdoMap(maintenance);
+      displayVehicles(vehicles, lastOdoMap);
+    } else {
+      const el = document.getElementById("vehicle-list");
+      if (el) el.innerHTML = "<p>No vehicles found.</p>";
+    }
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+    const el = document.getElementById("vehicle-list");
+    if (el) el.innerHTML = "<p>Unable to load vehicles.</p>";
+  }
 }
 
-.vehicle-card:hover{
-  transform: translateY(-3px);
-  border-color: rgba(255,255,255,0.15);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+/* -----------------------------
+   Render vehicle cards (Index)
+------------------------------ */
+function displayVehicles(vehicles, lastOdoMap) {
+  const container = document.getElementById("vehicle-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  vehicles.forEach(vehicle => {
+    const vin = normalizeVin(vehicle.vin);
+    if (!vin) return;
+
+    const year = String(vehicle.year ?? "").trim();
+    const make = String(vehicle.make ?? "").trim();
+    const model = String(vehicle.model ?? "").trim();
+    const name = String(vehicle.name ?? "").trim();
+
+    const last = lastOdoMap instanceof Map ? lastOdoMap.get(vin) : null;
+    const lastMileageText = last && typeof last.odo === "number"
+      ? last.odo.toLocaleString()
+      : "—";
+
+    const card = document.createElement("div");
+    card.className = "card vehicle-card";
+    card.innerHTML = `
+      <h2>${name}${year ? ` (${year})` : ""}</h2>
+      <p><strong>Make:</strong> ${make || "—"}</p>
+      <p><strong>Model:</strong> ${model || "—"}</p>
+      <p><strong>VIN:</strong> ${vin}</p>
+      <p><strong>Last Mileage:</strong> ${lastMileageText}</p>
+    `;
+
+    card.addEventListener("click", () => {
+      window.location.href = `vehicle.html?vin=${encodeURIComponent(vin)}`;
+    });
+
+    container.appendChild(card);
+  });
 }
 
-.vehicle-card h2{ margin: 0 0 0.75rem; }
+/* -----------------------------
+   Fetch Maintenance History (generic helper)
+   NOTE: This version does not sort; your history.html does its own sorting.
+------------------------------ */
+async function fetchMaintenance(vin, containerId) {
+  try {
+    const response = await fetch(`${API_URL}?sheet=Maintenance`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-/* ---- Forms ---- */
-label{
-  display:block;
-  font-weight: 650;
-  margin-bottom: 0.35rem;
-  color: var(--text);
+    const data = await response.json();
+    const vehicleVin = normalizeVin(vin);
+
+    const vehicleRecords = (Array.isArray(data) ? data : [])
+      .filter(r => normalizeVin(r.vin || r.VIN) === vehicleVin);
+
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (vehicleRecords.length === 0) {
+      container.innerHTML = "<p>No maintenance records found.</p>";
+      return;
+    }
+
+    vehicleRecords.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <p><strong>Date:</strong> ${formatDate(r.timestamp)}</p>
+        <p><strong>Odometer:</strong> ${r.odometer || "N/A"}</p>
+        <p><strong>Service:</strong> ${r.service || "N/A"}</p>
+        <p><strong>Parts:</strong> ${r.parts || "N/A"}</p>
+        <p><strong>Notes:</strong> ${r.notes || "N/A"}</p>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Error loading maintenance:", err);
+    const container = document.getElementById(containerId);
+    if (container) container.innerHTML = "<p>Unable to load maintenance records.</p>";
+  }
 }
 
-input, textarea, select{
-  width:100%;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
-  font-size: 1rem;
-  outline: none;
+/* -----------------------------
+   Format Date as Month Day, Year
+------------------------------ */
+function formatDate(dateStr) {
+  if (!dateStr) return "N/A";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "N/A";
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
 }
 
-input::placeholder,
-textarea::placeholder{
-  color: var(--subtle);
+/* -----------------------------
+   Fetch Contacts for Schedule Email Dropdown
+------------------------------ */
+async function fetchContacts(selectId) {
+  try {
+    const response = await fetch(`${API_URL}?sheet=Contacts`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const contacts = await response.json();
+
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.innerHTML = `<option value="">Select email</option>`;
+
+    (Array.isArray(contacts) ? contacts : []).forEach(c => {
+      if (c.email) {
+        const option = document.createElement("option");
+        option.value = c.email;
+        option.textContent = `${c.name || c.email} (${c.email})`;
+        select.appendChild(option);
+      }
+    });
+  } catch (err) {
+    console.error("Failed to load contacts:", err);
+  }
 }
 
-input:focus, textarea:focus, select:focus{
-  border-color: rgba(255,255,255,0.3);
-  box-shadow: 0 0 0 3px var(--focus);
+/* -----------------------------
+   Submit Scheduled Maintenance
+------------------------------ */
+async function submitSchedule(vin, serviceId, dueId, emailId, notifyIds) {
+  const payload = {
+    type: "schedule",
+    vin,
+    service: document.getElementById(serviceId).value,
+    due_date: document.getElementById(dueId).value,
+    email: document.getElementById(emailId).value,
+    notify_14: document.getElementById(notifyIds[0]).checked,
+    notify_7: document.getElementById(notifyIds[1]).checked,
+    notify_3: document.getElementById(notifyIds[2]).checked,
+    notify_1: document.getElementById(notifyIds[3]).checked
+  };
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    alert("Maintenance scheduled successfully!");
+  } catch (err) {
+    console.error("Failed to save schedule:", err);
+    alert("Failed to save schedule.");
+  }
 }
 
-/* ---- Buttons ---- */
-button{
-  appearance:none;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: white;
-  font-weight: 700;
-  padding: 0.70rem 1.05rem;
-  border-radius: 12px;
-  cursor:pointer;
-  transition: transform 0.08s ease, filter 0.12s ease;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
-
-button:hover{
-  filter: brightness(1.1);
-}
-
-button:active{
-  transform: translateY(1px);
-}
-
-button:disabled{
-  opacity: 0.6;
-  cursor:not-allowed;
-}
-
-/* ---- Lists ---- */
-.mlist{
-  margin: 0.25rem 0 0 0;
-  padding-left: 1.1rem;
-}
-
-.mlist li{
-  margin: 0.12rem 0;
-}
-
-/* ---- Hints & errors ---- */
-.hint{ color: var(--muted); }
-.error{ color: var(--danger); }
-
-/* ---- Footer ---- */
-footer{
-  text-align:center;
-  padding: 1.25rem 1rem;
-  margin-top: 2rem;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-  background: rgba(255,255,255,0.02);
-}
-
-/* ---- Responsive ---- */
-@media (max-width: 600px){
-  .container{ padding: 0 0.75rem; }
-  .vehicle-list{ gap: 0.75rem; }
-  button{ width: 100%; }
-}
+/* -----------------------------
+   Auto-run index page load
+------------------------------ */
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("vehicle-list")) fetchVehicles();
+});

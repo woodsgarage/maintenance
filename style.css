@@ -1,6 +1,6 @@
 /* =====================================================
    Woods Garage — Dark Mode (Black Accent Theme)
-   Fix header font mismatch on Windows (Segoe UI Variable)
+   Fix header font mismatch on Windows
    ===================================================== */
 
 :root{
@@ -20,8 +20,13 @@
   --radius: 14px;
   --shadow: 0 10px 30px rgba(0,0,0,0.55);
 
-  /* Windows: use Segoe UI (non-variable) first to avoid optical sizing mismatch */
-  --font: "Segoe UI", Roboto, Arial, system-ui, -apple-system, sans-serif;
+  /*
+    IMPORTANT:
+    - Avoid `system-ui` here because on Windows it can map to Segoe UI Variable,
+      which can cause subtle differences line-to-line.
+    - Prefer non-variable Segoe UI first.
+  */
+  --font: "Segoe UI", "Segoe UI Emoji", "Segoe UI Symbol", Roboto, Arial, sans-serif;
 }
 
 *{ box-sizing:border-box; }
@@ -50,10 +55,21 @@ body{
 
   font-family: var(--font);
 
-  /* KEY FIX: stop variable-font optical sizing differences */
+  /*
+    Hard-lock variable font behavior:
+    - font-optical-sizing + font-variation-settings remove “opsz” differences
+    - font-synthesis prevents the browser from faking weight/style
+  */
   font-optical-sizing: none;
+  font-variation-settings: "opsz" 16, "wght" 700;
+  font-synthesis: none;
 
-  /* Also normalize rendering */
+  font-style: normal;
+  font-stretch: 100%;
+  font-kerning: normal;
+  font-feature-settings: "kern" 1;
+
+  /* Normalize rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -61,6 +77,13 @@ body{
 .main-header *{
   font-family: inherit;
   font-optical-sizing: inherit;
+  font-variation-settings: inherit;
+  font-synthesis: inherit;
+
+  font-style: inherit;
+  font-stretch: inherit;
+  font-kerning: inherit;
+  font-feature-settings: inherit;
 }
 
 /* Logo */
@@ -93,18 +116,28 @@ body{
   align-items:center;
 }
 
-/* FORCE: same weight, same letter spacing, same rendering */
+/*
+  FORCE: same face + same axis + same weight for both lines.
+  Only size and color differ below.
+*/
 .site-title,
 .site-subtitle{
   font-weight: 700;
+  font-style: normal;
+  font-stretch: 100%;
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 16, "wght" 700;
+  font-synthesis: none;
+
   letter-spacing: 0.3px;
   line-height: 1.1;
 }
 
-/* Only size + color differ (font face will match) */
+/* Only size differs */
 .site-title{
   font-size: 2rem;
   margin: 0;
+  color: var(--text);
 }
 
 .site-subtitle{

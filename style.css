@@ -27,6 +27,9 @@
     - Prefer non-variable Segoe UI first.
   */
   --font: "Segoe UI", "Segoe UI Emoji", "Segoe UI Symbol", Roboto, Arial, sans-serif;
+
+  /* FIX: one knob to guarantee identical vehicle card heights */
+  --vehicle-card-h: 214px;
 }
 
 *{ box-sizing:border-box; }
@@ -190,46 +193,41 @@ main{ padding: 1rem; }
   gap: 1rem;
   justify-content:center;
 
-  /* FIX: make items stretch to match tallest in row (when they are flex items) */
-  align-items: stretch;
-
-  /* FIX: guaranteed separation from the actions card */
+  /* FIX: ensure separation from actions card */
   margin-bottom: 1rem;
 }
 
 /*
-  FIX: target whatever app.js inserts as a direct child of .vehicle-list
-  (covers .card, .vehicle-card, <a>, <div>, etc.)
+  FIX: guarantee identical heights by locking the direct children of the list.
+  Works regardless of whether app.js inserts .vehicle-card, .card, <a>, <div>, etc.
 */
 .vehicle-list > *{
-  /* make each item participate as an equal-height flex item */
-  align-self: stretch;
-
-  /* consistent width behavior (matches your previous intent) */
   width: min(460px, 100%);
+  height: var(--vehicle-card-h);
 
-  /* ensure the item can actually stretch in height */
+  /* ensure content cannot increase height */
+  overflow: hidden;
+
+  /* allow internal layout without weird overflow sizing */
   display:flex;
   flex-direction:column;
 }
 
-/* keep your existing selector, but ensure it fills height if it is the outer item */
+/* If the injected element itself is the card, make it fill */
+.vehicle-list > .card,
+.vehicle-list > .vehicle-card{
+  height: 100%;
+}
+
+/* If there is a .card inside a wrapper, make that inner card fill too */
+.vehicle-list > * > .card{
+  height: 100%;
+}
+
+/* Keep your existing hover behavior */
 .vehicle-card{
   cursor:pointer;
   transition: transform 0.12s ease, border-color 0.12s ease;
-
-  /* FIX: fill row height */
-  height: 100%;
-}
-
-/* If the outer card is actually .card (very common), force it to fill too */
-.vehicle-list > .card{
-  height: 100%;
-}
-
-/* If the outer card is .vehicle-card directly under the list */
-.vehicle-list > .vehicle-card{
-  height: 100%;
 }
 
 .vehicle-card:hover{

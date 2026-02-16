@@ -2,30 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Vehicle Maintenance</title>
+  <title>Woods Garage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>
-    <span>Wood&rsquo;s Garage</span><br>
-    <span>Vehicle Maintenance</span>
-  </h1>
+<header class="main-header">
+  <h1>Woods Garage</h1>
+  <p class="subtitle">Vehicle Maintenance System</p>
+
+  <!-- Logo under title (INDEX ONLY) -->
+  <div class="logo-wrapper">
+    <div class="logo-badge">
+      <img src="images/logo.png" alt="Woods Garage Logo" class="main-logo">
+    </div>
+  </div>
 </header>
 
 <main class="container">
-  <h2>Select a Vehicle</h2>
-
   <div id="vehicle-list" class="vehicle-list">
-    <!-- Vehicle cards will load here -->
-  </div>
-
-  <!-- Bottom Actions Card -->
-  <div class="card actions">
-    <button type="button" onclick="window.location.href='add_vehicle.html'">
-      Add Vehicle
-    </button>
+    <!-- Vehicles load here via app.js -->
   </div>
 </main>
 

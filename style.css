@@ -1,6 +1,6 @@
 /* =====================================================
-   Woods Garage — Dark Mode (Black Accent Theme)
-   Logo ABOVE Title
+   Woods Garage — Dark Mode
+   FIXED Matching Header Typography
    ===================================================== */
 
 :root{
@@ -11,16 +11,14 @@
 
   --text: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.70);
-  --subtle: rgba(255,255,255,0.55);
 
   --accent: #1f1f21;
   --accent-2: #2a2a2d;
-  --focus: rgba(255,255,255,0.15);
 
   --radius: 14px;
   --shadow: 0 10px 30px rgba(0,0,0,0.55);
 
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-stack: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 /* -------- Base -------- */
@@ -28,7 +26,7 @@
 
 body{
   margin:0;
-  font-family: var(--font);
+  font-family: var(--font-stack);
   background:
     radial-gradient(1200px 700px at 20% -10%, rgba(255,255,255,0.04), transparent 55%),
     radial-gradient(900px 600px at 90% 0%, rgba(255,255,255,0.03), transparent 60%),
@@ -43,50 +41,51 @@ body{
   padding: 3rem 1rem 2.2rem;
   background: linear-gradient(135deg, #111111, #181818);
   border-bottom: 1px solid var(--border);
+
+  /* FORCE identical typography */
+  font-family: var(--font-stack);
+  font-weight: 700;
 }
 
+/* Make EVERYTHING inside header same font + weight */
 .main-header *{
-  font-family: inherit;
+  font-family: inherit !important;
+  font-weight: inherit !important;
 }
 
 /* Logo */
 .logo-wrapper{
   display:flex;
   justify-content:center;
-  margin-bottom: 1.6rem;
+  margin-bottom:1.6rem;
 }
 
 .logo-badge{
   background: linear-gradient(145deg, #1c1c1f, #141416);
-  padding: 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(255,255,255,0.06);
+  padding:22px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,0.06);
   box-shadow:
     0 16px 45px rgba(0,0,0,0.7),
     inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .main-logo{
-  width: 180px;
+  width:180px;
   height:auto;
   display:block;
-  filter: drop-shadow(0 8px 22px rgba(0,0,0,0.7));
 }
 
 /* Title */
 .site-title{
   margin:0;
   font-size:2rem;
-  font-weight:750;
-  letter-spacing:0.4px;
 }
 
-/* Subtitle */
+/* Subtitle — same weight, just smaller + lighter color */
 .site-subtitle{
-  margin-top:0.5rem;
+  margin-top:0.6rem;
   font-size:1rem;
-  font-weight:650;
-  letter-spacing:0.3px;
   color: var(--muted);
 }
 
@@ -109,16 +108,6 @@ main{ padding:1rem; }
   box-shadow: var(--shadow);
 }
 
-.card + .card{ margin-top:1rem; }
-
-.card.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.75rem;
-  justify-content:center;
-}
-
-/* -------- Vehicle Cards -------- */
 .vehicle-list{
   display:flex;
   flex-wrap:wrap;
@@ -129,38 +118,11 @@ main{ padding:1rem; }
 .vehicle-card{
   width:min(460px,100%);
   cursor:pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.12s ease;
 }
 
 .vehicle-card:hover{
   transform: translateY(-3px);
-  border-color: rgba(255,255,255,0.15);
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-}
-
-.vehicle-card h2{ margin:0 0 0.75rem; }
-
-/* -------- Forms -------- */
-label{
-  display:block;
-  font-weight:650;
-  margin-bottom:0.35rem;
-}
-
-input,textarea,select{
-  width:100%;
-  background: var(--panel-2);
-  color: var(--text);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:10px;
-  padding:0.65rem 0.75rem;
-  font-size:1rem;
-  outline:none;
-}
-
-input:focus,textarea:focus,select:focus{
-  border-color: rgba(255,255,255,0.3);
-  box-shadow:0 0 0 3px var(--focus);
 }
 
 /* -------- Buttons -------- */
@@ -169,16 +131,12 @@ button{
   border:1px solid rgba(255,255,255,0.15);
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color:white;
-  font-weight:750;
+  font-weight:700;
   padding:0.7rem 1.05rem;
   border-radius:12px;
   cursor:pointer;
-  transition: transform 0.08s ease, filter 0.12s ease;
   box-shadow:0 8px 20px rgba(0,0,0,0.6);
 }
-
-button:hover{ filter:brightness(1.1); }
-button:active{ transform:translateY(1px); }
 
 /* -------- Footer -------- */
 footer{
